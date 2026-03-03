@@ -1,8 +1,9 @@
 from .base import AgentEnvironment
 from .basic import BasicEnvironment
-from .browsecomp import BrowseCompPlusEnvironment
-
-# from .browsecomp import BrowseCompPlusEnvironment
+try:
+    from .browsecomp import BrowseCompPlusEnvironment
+except ImportError:
+    pass  # transformers not installed; browsecomp env unavailable
 from .plancraft import PlancraftEnvironment
 from .registry import (
     T,

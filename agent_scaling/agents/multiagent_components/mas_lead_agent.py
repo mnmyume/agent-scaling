@@ -464,7 +464,7 @@ class LeadAgent(BaseAgentWithTools):
 
         # Get findings from all subagents
         for agent_id, agent in self.subagents.items():
-            for finding in self.memory.agent_findings[agent_id]:
+            for finding in self.memory.agent_findings.get(agent_id, []):
                 if finding and len(finding.strip()) > 20:
                     all_agent_findings.append(f"Agent {agent_id}: {finding[:200]}...")
         # Also include current round results for immediate context

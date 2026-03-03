@@ -37,7 +37,12 @@ class MessageTurnInternal(MessageTurn):
 
     @property
     def cost(self) -> Optional[float]:
-        return completion_cost(self.litellm_message) if self.litellm_message else None
+        if not self.litellm_message:
+            return None
+        try:
+            return completion_cost(self.litellm_message)
+        except Exception:
+            return None
 
 
 class LLMResponseMessage(BaseModel):
@@ -47,7 +52,12 @@ class LLMResponseMessage(BaseModel):
     @computed_field
     @cached_property
     def cost(self) -> Optional[float]:
-        return completion_cost(self.litellm_message) if self.litellm_message else None
+        if not self.litellm_message:
+            return None
+        try:
+            return completion_cost(self.litellm_message)
+        except Exception:
+            return None
 
 
 class AgentConversationHistory(BaseModel):
