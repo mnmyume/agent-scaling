@@ -131,14 +131,25 @@ class LeadAgent(BaseAgentWithTools):
                 "prompts",
                 "env_prompts",
                 "tools",
+                "llm_config",
             ]
         }
 
         # Create subagents based on the plan
-        for subtask in plan.subtasks:
+        for idx, subtask in enumerate(plan.subtasks):
             logger.info(
                 f"Creating agent {subtask.agent_id} with focus: {subtask.focus}"
             )
+
+            # Get per-role LLM override if llm_config has role_models
+            llm_override = None
+            if self.llm_config is not None and self.llm_config.role_models:
+                role_key = f"worker_{idx}"
+                llm_override = self.llm_config.get_llm_for_role(role_key)
+                logger.info(
+                    f"Agent {subtask.agent_id} using model: {llm_override.model}"
+                )
+
             # Create subagent with proper parameters
             subagent = WorkerSubagent.init_from_agent(
                 # Required parameters for ResearchSubagent
@@ -149,6 +160,7 @@ class LeadAgent(BaseAgentWithTools):
                 strategy=subtask.focus,
                 task_instance=task_instance,
                 min_iterations_per_agent=self.min_iterations_per_agent,
+                llm_override=llm_override,
                 **filtered_subagent_kwargs,
             )
             self.subagents[subtask.agent_id] = subagent

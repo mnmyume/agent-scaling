@@ -60,6 +60,7 @@ class WorkerSubagent(BaseAgentWithTools):
         strategy: str,
         min_iterations_per_agent: int = 3,
         max_iterations_per_agent: int = 10,
+        llm_override: "ChatLiteLLMLC | None" = None,
         **kwargs,
     ):
         return cls(
@@ -69,7 +70,7 @@ class WorkerSubagent(BaseAgentWithTools):
             strategy=strategy,
             min_iterations_per_agent=min_iterations_per_agent,
             max_iterations_per_agent=max_iterations_per_agent,
-            llm=agent.llm,
+            llm=llm_override if llm_override is not None else agent.llm,
             dataset=agent.dataset,
             prompts=agent.prompts,
             tools=agent.tools,

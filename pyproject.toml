@@ -21,6 +21,8 @@ dependencies = [
     "plancraft>=0.4.9",
     "pytest>=7.0.0",
     "tavily-python>=0.7.9",
+    "scikit-learn>=1.5.0",
+    "joblib>=1.4.0",
 ]
 
 [project.optional-dependencies]

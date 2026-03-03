@@ -1,0 +1,31 @@
+# Model Pool Configuration
+# List of LLM model strings available for heterogeneous MAS configurations.
+# Uses LiteLLM model naming conventions: https://docs.litellm.ai/docs/providers
+#
+# Prefixes:
+#   openai/       → OpenAI models (or omit prefix)
+#   anthropic/    → Anthropic models
+#   gemini/       → Google Gemini models
+#   openrouter/   → Any model via OpenRouter (requires OPENROUTER_API_KEY)
+
+models:
+  # # OpenAI
+  # - "gpt-4o-mini"
+  # - "gpt-4o"
+
+  # # Google
+  # - "gemini/gemini-2.0-flash"
+  # - "gemini/gemini-2.5-flash"
+
+  # # Anthropic
+  # - "anthropic/claude-3-5-sonnet-20241022"
+  # - "anthropic/claude-3-5-haiku-20241022"
+
+  # OpenRouter
+  - "openrouter/deepseek/deepseek-v3.2"
+  - "openrouter/qwen/qwen3-235b-a22b-2507"
+  - "openrouter/qwen/qwen3-32b"
+  - "openrouter/qwen/qwen3-coder-next"
+  - "openrouter/qwen/qwen3-8b"
+  - "openrouter/meta-llama/llama-3.3-70b-instruct"
+  - "openrouter/meta-llama/llama-3.1-8b-instruct"

@@ -32,6 +32,7 @@ venv/
 exp_outputs/
 exp_outputs_new/
 exp_outputs_test/
+surrogate_outputs/
 outputs/
 etc/
 

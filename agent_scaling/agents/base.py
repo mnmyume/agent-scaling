@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Tuple, TypeVar
 
 from langchain_core.language_models import LanguageModelInput
 from langchain_core.messages import BaseMessage
@@ -25,9 +27,11 @@ class BaseAgent:
         llm: ChatLiteLLMLC,
         dataset: Dataset,
         prompts: Dict[str, Prompt],
+        llm_config: Optional[LLMConfig] = None,
         **kwargs,
     ):
         self.llm = llm
+        self.llm_config = llm_config
         self.dataset = dataset
         assert dataset.task_shared_prompts is not None, (
             "task_shared_prompts must be provided"
@@ -55,7 +59,7 @@ class BaseAgent:
     ) -> "BaseAgent":
         llm = llm_config.get_llm()
         dataset = dataset_config.dataset
-        return cls(llm=llm, dataset=dataset, prompts=prompts, **kwargs)
+        return cls(llm=llm, dataset=dataset, prompts=prompts, llm_config=llm_config, **kwargs)
 
     @classmethod
     def check_required_prompts(cls, prompts: Dict[str, Prompt]) -> None:
@@ -126,6 +130,7 @@ class BaseAgentWithTools(BaseAgent, Generic[AgentEnvType]):
             llm=llm,
             dataset=dataset,
             prompts=prompts,
+            llm_config=llm_config,
             env=env,
             env_prompts=env_prompts,
             tools=tools,
@@ -185,7 +190,7 @@ class AgentSystem(BaseAgentSystem, BaseAgent, ABC):
     ) -> "AgentSystem":
         llm = llm_config.get_llm()
         dataset = dataset_config.dataset
-        return cls(llm=llm, dataset=dataset, prompts=prompts, **kwargs)
+        return cls(llm=llm, dataset=dataset, prompts=prompts, llm_config=llm_config, **kwargs)
 
 
 class AgentSystemWithTools(AgentSystem, BaseAgentWithTools[AgentEnvType], ABC):
@@ -209,6 +214,7 @@ class AgentSystemWithTools(AgentSystem, BaseAgentWithTools[AgentEnvType], ABC):
             llm=llm,
             dataset=dataset,
             prompts=prompts,
+            llm_config=llm_config,
             env=env,
             env_prompts=env_prompts,
             tools=tools,

@@ -36,8 +36,16 @@ class LLMConfig(BaseModel):
 
     params: LLMParams
     model: str = "gemini/gemini-2.0-flash"
+    role_models: Dict[str, str] = {}
 
     def get_llm(self) -> ChatLiteLLMLC:
         return ChatLiteLLMLC(
             model=self.model, **self.params.model_dump(exclude={"cache"})
+        )
+
+    def get_llm_for_role(self, role: str) -> ChatLiteLLMLC:
+        """Return a role-specific LLM, falling back to the global model."""
+        model_name = self.role_models.get(role, self.model)
+        return ChatLiteLLMLC(
+            model=model_name, **self.params.model_dump(exclude={"cache"})
         )
