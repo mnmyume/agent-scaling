@@ -5,7 +5,7 @@ templates_local_path: prompts/dataset-shared/plancraft.yaml
 env:
   name: plancraft
   tools:
-    - search
+    - search_recipe
     - move
     - smelt
     - impossible

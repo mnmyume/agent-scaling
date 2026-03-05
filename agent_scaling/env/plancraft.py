@@ -79,7 +79,7 @@ class PlancraftEnvironment(AgentEnvironmentTools):
         return False
 
     @cls_tool
-    def search(self, recipe_name: str) -> str:
+    def search_recipe(self, recipe_name: str) -> str:
         """
         Search for recipes to craft a specific item.
         """

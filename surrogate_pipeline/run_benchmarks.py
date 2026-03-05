@@ -16,8 +16,11 @@ Usage:
 import argparse
 import json
 import os
+import signal
 import subprocess
 import sys
+import threading
+import time
 from pathlib import Path
 
 from surrogate_pipeline.utils import (
@@ -70,6 +73,26 @@ def build_hydra_cmd(
     return cmd
 
 
+def _stream_pipe(pipe, log_file, prefix, logger, is_stderr=False):
+    """Read from a pipe line-by-line and write to log file + selective terminal output."""
+    with open(log_file, "w") as f:
+        for line in iter(pipe.readline, ""):
+            f.write(line)
+            f.flush()
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if is_stderr:
+                # Show tqdm progress bars and errors/warnings
+                if any(kw in stripped for kw in ["%|", "it/s", "Error", "error", "Traceback", "Exception"]):
+                    logger.info(f"{prefix} {stripped}")
+            else:
+                # Show instance-level progress from exp_runner
+                if any(kw in stripped for kw in ["Instance", "instance", "avg_success", "Success", "success", "metrics", "Completed", "completed"]):
+                    logger.info(f"{prefix} {stripped}")
+    pipe.close()
+
+
 def run_single_benchmark(
     config: dict,
     dataset: str,
@@ -83,6 +106,18 @@ def run_single_benchmark(
     output_dir = raw_runs_dir / config_id
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Skip if already completed
+    metrics_file = output_dir / "dataset_eval_metrics.json"
+    if metrics_file.exists():
+        metrics = load_json(metrics_file)
+        logger.info(f"[{config_id}] ⏭️  Skipping (already completed): avg_success={metrics.get('avg_success', 'N/A')}")
+        return {
+            "config_id": config_id,
+            "config": config,
+            "dataset": dataset,
+            "metrics": metrics,
+        }
+
     cmd = build_hydra_cmd(
         config=config,
         dataset=dataset,
@@ -93,28 +128,56 @@ def run_single_benchmark(
 
     logger.info(f"[{config_id}] Running: {' '.join(cmd)}")
 
+    timeout = 10800  # 3 hour timeout per config
+
     try:
-        result = subprocess.run(
+        proc = subprocess.Popen(
             cmd,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=1800,  # 30 min timeout per config
         )
 
-        # Save stdout/stderr for debugging
-        (output_dir / "stdout.log").write_text(result.stdout)
-        (output_dir / "stderr.log").write_text(result.stderr)
+        # Stream stdout and stderr in background threads
+        stdout_log = output_dir / "stdout.log"
+        stderr_log = output_dir / "stderr.log"
 
-        if result.returncode != 0:
-            logger.error(f"[{config_id}] Failed (exit={result.returncode})")
-            logger.error(f"[{config_id}] stderr: {result.stderr[-500:]}")
+        stdout_thread = threading.Thread(
+            target=_stream_pipe,
+            args=(proc.stdout, stdout_log, f"[{config_id}]", logger),
+            daemon=True,
+        )
+        stderr_thread = threading.Thread(
+            target=_stream_pipe,
+            args=(proc.stderr, stderr_log, f"[{config_id}][stderr]", logger, True),
+            daemon=True,
+        )
+        stdout_thread.start()
+        stderr_thread.start()
+
+        # Wait for process with timeout
+        try:
+            returncode = proc.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            logger.error(f"[{config_id}] Timed out after {timeout}s, killing process")
+            proc.kill()
+            proc.wait()
+            stdout_thread.join(timeout=5)
+            stderr_thread.join(timeout=5)
+            return None
+
+        stdout_thread.join(timeout=10)
+        stderr_thread.join(timeout=10)
+
+        if returncode != 0:
+            logger.error(f"[{config_id}] Failed (exit={returncode})")
             return None
 
         # Parse metrics
         metrics_file = output_dir / "dataset_eval_metrics.json"
         if metrics_file.exists():
             metrics = load_json(metrics_file)
-            logger.info(f"[{config_id}] Success: avg_success={metrics.get('avg_success', 'N/A')}")
+            logger.info(f"[{config_id}] ✅ Success: avg_success={metrics.get('avg_success', 'N/A')}")
             return {
                 "config_id": config_id,
                 "config": config,
@@ -125,9 +188,6 @@ def run_single_benchmark(
             logger.warning(f"[{config_id}] No metrics file found")
             return None
 
-    except subprocess.TimeoutExpired:
-        logger.error(f"[{config_id}] Timed out after 1800s")
-        return None
     except Exception as e:
         logger.error(f"[{config_id}] Exception: {e}")
         return None
