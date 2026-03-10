@@ -45,15 +45,25 @@ class BaseAgent:
             ret = llm_params.model_dump()
         return ret
 
+    @staticmethod
+    def _build_llm(
+        llm_config: LLMConfig | Dict[str, Any] | ChatLiteLLMLC,
+    ) -> ChatLiteLLMLC:
+        if isinstance(llm_config, ChatLiteLLMLC):
+            return llm_config
+        if isinstance(llm_config, LLMConfig):
+            return llm_config.get_llm()
+        return LLMConfig(**llm_config).get_llm()
+
     @classmethod
     def from_config(
         cls,
-        llm_config: LLMConfig,
+        llm_config: LLMConfig | Dict[str, Any] | ChatLiteLLMLC,
         dataset_config: DatasetConfig,
         prompts: Dict[str, Prompt],
         **kwargs,
     ) -> "BaseAgent":
-        llm = llm_config.get_llm()
+        llm = cls._build_llm(llm_config)
         dataset = dataset_config.dataset
         return cls(llm=llm, dataset=dataset, prompts=prompts, **kwargs)
 
@@ -111,12 +121,12 @@ class BaseAgentWithTools(BaseAgent, Generic[AgentEnvType]):
     @classmethod
     def from_config(
         cls,
-        llm_config: LLMConfig,
+        llm_config: LLMConfig | Dict[str, Any] | ChatLiteLLMLC,
         dataset_config: DatasetConfig,
         prompts: Dict[str, Prompt],
         **kwargs,
     ) -> "BaseAgentWithTools":
-        llm = llm_config.get_llm()
+        llm = cls._build_llm(llm_config)
         dataset = dataset_config.dataset
         env_config = dataset_config.env
         env = env_config.name
@@ -178,12 +188,12 @@ class AgentSystem(BaseAgentSystem, BaseAgent, ABC):
     @classmethod
     def from_config(
         cls,
-        llm_config: LLMConfig,
+        llm_config: LLMConfig | Dict[str, Any] | ChatLiteLLMLC,
         dataset_config: DatasetConfig,
         prompts: Dict[str, Prompt],
         **kwargs,
     ) -> "AgentSystem":
-        llm = llm_config.get_llm()
+        llm = cls._build_llm(llm_config)
         dataset = dataset_config.dataset
         return cls(llm=llm, dataset=dataset, prompts=prompts, **kwargs)
 
@@ -194,12 +204,12 @@ class AgentSystemWithTools(AgentSystem, BaseAgentWithTools[AgentEnvType], ABC):
     @classmethod
     def from_config(
         cls,
-        llm_config: LLMConfig,
+        llm_config: LLMConfig | Dict[str, Any] | ChatLiteLLMLC,
         dataset_config: DatasetConfig,
         prompts: Dict[str, Prompt],
         **kwargs,
     ) -> "AgentSystemWithTools":
-        llm = llm_config.get_llm()
+        llm = cls._build_llm(llm_config)
         dataset = dataset_config.dataset
         env_config = dataset_config.env
         env = env_config.name

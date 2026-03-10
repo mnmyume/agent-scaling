@@ -41,3 +41,18 @@ class LLMConfig(BaseModel):
         return ChatLiteLLMLC(
             model=self.model, **self.params.model_dump(exclude={"cache"})
         )
+
+
+class LLMOverride(BaseModel):
+    model: Optional[str] = None
+    params: Optional[LLMParams] = None
+
+    def merge(self, base: LLMConfig) -> LLMConfig:
+        model = self.model or base.model
+        if self.params is None:
+            params = base.params
+        else:
+            base_params = base.params.model_dump()
+            override_params = self.params.model_dump(exclude_none=True)
+            params = LLMParams(**{**base_params, **override_params})
+        return LLMConfig(model=model, params=params)

@@ -1,13 +1,15 @@
 import threading
 import traceback
-from typing import cast
+from typing import Any, Dict, cast
 
 from langchain_core.messages import AIMessage
 from langchain_core.messages.utils import convert_to_openai_messages
 
 from agent_scaling.agents.base import BaseAgentWithTools
+from agent_scaling.config.llm import LLMConfig
 from agent_scaling.datasets import DatasetInstance
 from agent_scaling.logger import logger
+from agent_scaling.llm import ChatLiteLLMLC
 
 from .conversation import SubAgentConversationHistory, SubAgentRoundResult
 
@@ -54,6 +56,7 @@ class WorkerSubagent(BaseAgentWithTools):
     def init_from_agent(
         cls,
         agent: BaseAgentWithTools,
+        llm_override: LLMConfig | Dict[str, Any] | ChatLiteLLMLC | None = None,
         agent_id: str,
         objective: str,
         original_query: str,
@@ -62,6 +65,11 @@ class WorkerSubagent(BaseAgentWithTools):
         max_iterations_per_agent: int = 10,
         **kwargs,
     ):
+        llm = (
+            cls._build_llm(llm_override)
+            if llm_override is not None
+            else agent.llm
+        )
         return cls(
             agent_id=agent_id,
             objective=objective,
@@ -69,7 +77,7 @@ class WorkerSubagent(BaseAgentWithTools):
             strategy=strategy,
             min_iterations_per_agent=min_iterations_per_agent,
             max_iterations_per_agent=max_iterations_per_agent,
-            llm=agent.llm,
+            llm=llm,
             dataset=agent.dataset,
             prompts=agent.prompts,
             tools=agent.tools,

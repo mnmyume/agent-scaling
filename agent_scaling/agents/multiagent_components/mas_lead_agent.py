@@ -3,6 +3,8 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from agent_scaling.agents.base import BaseAgentWithTools
+from agent_scaling.config.llm import LLMConfig
+from agent_scaling.llm import ChatLiteLLMLC
 from agent_scaling.agents.output_validation import run_with_validation, validate_json
 from agent_scaling.config.prompts import NamedPrompt
 from agent_scaling.datasets import DatasetInstance
@@ -30,9 +32,25 @@ class LeadAgent(BaseAgentWithTools):
         memory: EnhancedMemory,
         min_iterations_per_agent: int = 3,
         num_base_agents: int = 3,
+        orchestrator_llm: LLMConfig | Dict[str, Any] | ChatLiteLLMLC | None = None,
+        subagent_llm: LLMConfig | Dict[str, Any] | ChatLiteLLMLC | None = None,
+        subagent_llms: list[LLMConfig | Dict[str, Any] | ChatLiteLLMLC] | None = None,
         **kwargs,
     ):
+        if orchestrator_llm is not None:
+            kwargs["llm"] = LeadAgent._build_llm(orchestrator_llm)
         super().__init__(*args, **kwargs)
+        self.orchestrator_llm = self.llm
+        self.subagent_llm = (
+            LeadAgent._build_llm(subagent_llm)
+            if subagent_llm is not None
+            else self.llm
+        )
+        self.subagent_llms = (
+            [LeadAgent._build_llm(cfg) for cfg in subagent_llms]
+            if subagent_llms is not None
+            else None
+        )
         self.memory = memory
         self.min_iterations_per_agent = min_iterations_per_agent
         self.num_base_agents = num_base_agents
@@ -135,14 +153,19 @@ class LeadAgent(BaseAgentWithTools):
         }
 
         # Create subagents based on the plan
-        for subtask in plan.subtasks:
+        for idx, subtask in enumerate(plan.subtasks):
             logger.info(
                 f"Creating agent {subtask.agent_id} with focus: {subtask.focus}"
             )
+            llm_override = self.subagent_llm
+            if self.subagent_llms is not None:
+                if idx < len(self.subagent_llms):
+                    llm_override = self.subagent_llms[idx]
             # Create subagent with proper parameters
             subagent = WorkerSubagent.init_from_agent(
                 # Required parameters for ResearchSubagent
                 agent=self,
+                llm_override=llm_override,
                 agent_id=subtask.agent_id,
                 objective=subtask.objective,
                 original_query=self.memory.original_task,

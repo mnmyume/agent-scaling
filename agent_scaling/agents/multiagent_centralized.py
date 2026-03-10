@@ -1,12 +1,14 @@
 import asyncio
 import os.path as osp
 import time
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from agent_scaling.agents.base import AgentSystemWithTools
+from agent_scaling.config.llm import LLMConfig
 from agent_scaling.config.llm import LLMParams
 from agent_scaling.datasets import DatasetInstance, DatasetInstanceOutputWithTrajectory
 from agent_scaling.logger import logger
+from agent_scaling.llm import ChatLiteLLMLC
 from agent_scaling.utils import write_yaml
 
 from .multiagent_components.conversation import OrchestrationResult
@@ -27,6 +29,9 @@ class CentralizedMultiAgentSystem(AgentSystemWithTools):
         n_base_agents: int = 3,
         min_iterations_per_agent: int = 3,
         max_iterations_per_agent: int = 10,
+        orchestrator_llm: LLMConfig | Dict[str, Any] | ChatLiteLLMLC | None = None,
+        subagent_llm: LLMConfig | Dict[str, Any] | ChatLiteLLMLC | None = None,
+        subagent_llms: list[LLMConfig | Dict[str, Any] | ChatLiteLLMLC] | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -35,14 +40,37 @@ class CentralizedMultiAgentSystem(AgentSystemWithTools):
         self.n_base_agents = n_base_agents
         self.min_iterations_per_agent = min_iterations_per_agent
         self.max_iterations_per_agent = max_iterations_per_agent
+        self.orchestrator_llm = (
+            self._build_llm(orchestrator_llm)
+            if orchestrator_llm is not None
+            else self.llm
+        )
+        self.subagent_llm = (
+            self._build_llm(subagent_llm) if subagent_llm is not None else self.llm
+        )
+        self.subagent_llms = (
+            [self._build_llm(cfg) for cfg in subagent_llms]
+            if subagent_llms is not None
+            else None
+        )
+        if orchestrator_llm is not None:
+            self.llm = self.orchestrator_llm
+            self.env, self.llm_w_tools = self.init_environment()
 
+        lead_kwargs = dict(kwargs)
+        lead_kwargs["llm"] = self.orchestrator_llm
         self.lead_agent = LeadAgent(
             *args,
             memory=self.memory,
             min_iterations_per_agent=min_iterations_per_agent,
             num_base_agents=n_base_agents,
-            domain_config={"task_blurb": kwargs.get("task_blurb", "task coordinator")},
-            **kwargs,
+            orchestrator_llm=self.orchestrator_llm,
+            subagent_llm=self.subagent_llm,
+            subagent_llms=self.subagent_llms,
+            domain_config={
+                "task_blurb": lead_kwargs.get("task_blurb", "task coordinator")
+            },
+            **lead_kwargs,
         )
 
         logger.info(

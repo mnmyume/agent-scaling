@@ -12,7 +12,7 @@ from agent_scaling.utils import (
 )
 
 from .dataset import DatasetConfig
-from .llm import LLMConfig
+from .llm import LLMConfig, LLMOverride
 from .prompts import Prompt
 
 
@@ -20,7 +20,12 @@ class MultiAgentResearchConfig(BaseModel):
     n_base_agents: int = 3
     max_orchestrator_turns: int = 2
     min_searches_per_agent: int = 3
+    min_iterations_per_agent: int = 3
     max_iterations_per_agent: int = 7
+    task_blurb: Optional[str] = None
+    orchestrator_llm: Optional[LLMOverride] = None
+    subagent_llm: Optional[LLMOverride] = None
+    subagent_llms: Optional[list[LLMOverride]] = None
 
 
 class AgentConfig(BaseModel):
@@ -33,6 +38,21 @@ class AgentConfig(BaseModel):
         agent_cls = get_agent_cls(self.name)
         agent_cls.check_required_prompts(self.prompts)
         return self
+
+    @model_validator(mode="before")
+    @classmethod
+    def move_agent_specific_fields(cls, data: Any) -> Dict[str, Any]:
+        data = dict(data)
+        agent_specific = dict(data.get("agent_specific_config") or {})
+        for field_name in MultiAgentResearchConfig.model_fields.keys():
+            if field_name in data:
+                if field_name not in agent_specific:
+                    agent_specific[field_name] = data.pop(field_name)
+                else:
+                    data.pop(field_name)
+        if agent_specific:
+            data["agent_specific_config"] = agent_specific
+        return data
 
     @model_validator(mode="before")
     @classmethod
@@ -92,15 +112,29 @@ class RunConfig(BaseModel):
             disable_local_cache()
 
     def get_agent(self) -> AgentSystem:
+        agent_kwargs: Dict[str, Any] = {}
+        if self.agent.agent_specific_config is not None:
+            agent_kwargs = self.agent.agent_specific_config.model_dump(
+                exclude_none=True
+            )
+            if self.agent.agent_specific_config.orchestrator_llm is not None:
+                agent_kwargs["orchestrator_llm"] = (
+                    self.agent.agent_specific_config.orchestrator_llm.merge(self.llm)
+                )
+            if self.agent.agent_specific_config.subagent_llm is not None:
+                agent_kwargs["subagent_llm"] = (
+                    self.agent.agent_specific_config.subagent_llm.merge(self.llm)
+                )
+            if self.agent.agent_specific_config.subagent_llms is not None:
+                agent_kwargs["subagent_llms"] = [
+                    override.merge(self.llm)
+                    for override in self.agent.agent_specific_config.subagent_llms
+                ]
         return get_agent_cls(self.agent.name).from_config(
             llm_config=self.llm,
             dataset_config=self.dataset,
             prompts=self.agent.prompts,
-            **(
-                self.agent.agent_specific_config.model_dump(exclude_none=True)
-                if self.agent.agent_specific_config is not None
-                else {}
-            ),
+            **agent_kwargs,
         )
 
     def get_run_metadata(self) -> Dict[str, Any]:
