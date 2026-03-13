@@ -1,0 +1,18 @@
+dataset_id: finance-agent
+from_langfuse: false
+local_path: datasets/finance-agent.json
+templates_local_path: prompts/dataset-shared/finance-agent.yaml
+eval_llm:
+  model: gemini/gemini-2.5-flash
+  params:
+    temperature: 0.0
+eval_prompts:
+  grader:
+    local_path: prompts/eval/finance-agent-grader.yaml
+env:
+  name: basic
+  tools:
+    - web_search
+    - python_repl
+    - multiply
+    - done

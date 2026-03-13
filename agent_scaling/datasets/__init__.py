@@ -1,5 +1,6 @@
 from .base import (
     Dataset,
+    DatasetEnvStatus,
     DatasetInstance,
     DatasetInstanceOutput,
     DatasetInstanceOutputWithTrajectory,
@@ -7,10 +8,12 @@ from .base import (
     TrajectoryStep,
 )
 from .browsecomp import BrowseCompDataset, BrowseCompInstance
+from .finance_agent import FinanceAgentDataset, FinanceAgentInstance
 from .gsm8k import GSM8KDataset, GSM8KInstance
 from .healthbench import HealthBenchDataset, HealthBenchInstance
 from .nejm import NEJMDataset, NEJMInstance
 from .plancraft import PlancraftDataset, PlancraftInstance
+from .workbench import WorkbenchDataset, WorkbenchInstance
 from .registry import (
     get_dataset,
     get_dataset_cls,

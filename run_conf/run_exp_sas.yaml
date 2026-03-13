@@ -1,0 +1,22 @@
+defaults:
+  - _self_
+  - agent: single-agent
+  - dataset: plancraft-test
+
+llm:
+  model: gemini/gemini-2.5-flash
+  params:
+    temperature: 0.0
+
+log_langfuse: false
+use_disk_cache: true
+num_workers: 1
+max_instances: 100
+
+run_name: sas_plancraft_${llm.model}_${now:%Y-%m-%d}_${now:%H-%M-%S}
+
+hydra:
+  verbose: false
+  run:
+    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm.model}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+hydra/job_logging: disabled

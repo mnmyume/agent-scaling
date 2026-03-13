@@ -18,6 +18,7 @@ from agent_scaling.datasets import (
 )
 from agent_scaling.env import AgentEnvironment
 from agent_scaling.logger import logger
+from agent_scaling.metrics import MetricsArtifacts, extract_usage_from_ai_message
 from agent_scaling.utils import write_yaml
 
 from .registry import register_agent
@@ -54,9 +55,16 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
         final_answer = ""
         final_env_output = {}
         is_done = False
+        llm_calls = []
+        first_response_text: Optional[str] = None
         for step in range(self.max_steps):
             response: BaseMessage = llm_w_tools.invoke(messages, **llm_params_dict)  # type: ignore
             response = cast(AIMessage, response)
+            usage = extract_usage_from_ai_message(response)
+            if usage is not None:
+                llm_calls.append(usage)
+            if first_response_text is None and response.content:
+                first_response_text = str(response.content)
             if response.tool_calls:
                 response.tool_calls = [response.tool_calls[0]]
 
@@ -104,6 +112,16 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
                 final_answer = trajectory[-1].observation
                 break
         final_env_output = env.env_status()
+        metrics_artifacts = MetricsArtifacts(
+            llm_calls=llm_calls,
+            tool_calls=final_env_output.num_steps,
+            reasoning_turns=final_env_output.num_steps,
+            inter_agent_messages=0,
+            final_output=final_answer,
+            pre_state_text=first_response_text,
+            post_state_text=final_answer,
+        )
+        metrics_artifacts.finalize()
         if instance_dir is not None:
             out = {
                 "trajectory": [t.model_dump() for t in trajectory],
@@ -119,4 +137,5 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
             agent_output=final_answer,
             trajectory=trajectory,
             final_env_output=final_env_output,
+            metrics_artifacts=metrics_artifacts,
         )

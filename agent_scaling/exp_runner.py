@@ -12,6 +12,11 @@ from agent_scaling.agents import AgentSystem
 from agent_scaling.config.run import RunConfig
 from agent_scaling.datasets import Dataset, DatasetInstance
 from agent_scaling.logger import logger
+from agent_scaling.metrics import (
+    aggregate_paper_metrics,
+    compute_instance_paper_metrics,
+    load_baseline_metrics,
+)
 from agent_scaling.utils import write_json, write_yaml
 
 
@@ -20,6 +25,7 @@ class InstanceSave(BaseModel):
     output: Dict[str, Any]
     metrics: Dict[str, Union[int, float, str]]
     expected_output: Optional[Any] = None
+    paper_metrics: Optional[Dict[str, Any]] = None
 
 
 class ExperimentRunner:
@@ -29,14 +35,16 @@ class ExperimentRunner:
         self.output_dir = config.save_dir
         self.dataset: Dataset = self.config.dataset.dataset
         self.lf_dataset = self.config.dataset.langfuse_dataset
+        if self.log_langfuse and self.lf_dataset is None:
+            logger.warning(
+                "Langfuse logging enabled but no Langfuse dataset is available; disabling logging."
+            )
+            self.log_langfuse = False
         self.agent: AgentSystem = self.config.get_agent()
         logger.debug(f"Logging to langfuse: {self.log_langfuse}")
 
     def _get_context_manager(self, index: int) -> contextlib.AbstractContextManager:
         if self.log_langfuse:
-            assert self.lf_dataset is not None, (
-                "Langfuse dataset must be set for logging"
-            )
             return self.lf_dataset.items[index].run(
                 run_name=self.config.run_name,
                 run_description=self.config.llm.model,
@@ -91,6 +99,23 @@ class ExperimentRunner:
             metrics.append(inst_metrics)
 
         all_metrics = self.dataset.get_metrics(metrics)
+        if self.config.metrics.enable:
+            baseline = load_baseline_metrics(self.config.metrics.baseline_run_dir)
+            if baseline is not None:
+                baseline["_run_dir"] = self.config.metrics.baseline_run_dir
+            paper_metrics = aggregate_paper_metrics(
+                [
+                    m.get("_paper_metrics", {})
+                    for m in metrics
+                    if isinstance(m, dict)
+                ],
+                config=self.config.metrics,
+                baseline_metrics=baseline,
+                dataset_id=self.dataset.dataset_id,
+                agent_name=self.config.agent.name,
+                runs_root=self.config.metrics.domain_complexity_runs_root,
+            )
+            all_metrics["paper_metrics"] = paper_metrics
         if self.output_dir is not None:
             write_json(
                 all_metrics,
@@ -128,6 +153,10 @@ class ExperimentRunner:
                 instance_idx=i,
             )
             inst_metrics = self.dataset.get_instance_eval_metrics(output)
+            paper_instance_metrics = compute_instance_paper_metrics(
+                inst_metrics, output, self.dataset, self.config.metrics
+            )
+            inst_metrics["_paper_metrics"] = paper_instance_metrics
             inst_output = self.dataset.get_instance_eval_output(output)
             if isinstance(span, LangfuseSpan):
                 span.update(
@@ -144,8 +173,13 @@ class ExperimentRunner:
                 output_save = InstanceSave(
                     inp=instance.get_prompt_info(),
                     output=inst_output,
-                    metrics=inst_metrics,  # type: ignore
+                    metrics={
+                        k: v
+                        for k, v in inst_metrics.items()
+                        if k != "_paper_metrics"
+                    },  # type: ignore
                     expected_output=instance.expected_output,
+                    paper_metrics=paper_instance_metrics,
                 )
                 write_yaml(
                     output_save.model_dump(),
@@ -216,6 +250,23 @@ class ExperimentRunner:
                     pbar.update(1)
 
         all_metrics = self.dataset.get_metrics(metrics)
+        if self.config.metrics.enable:
+            baseline = load_baseline_metrics(self.config.metrics.baseline_run_dir)
+            if baseline is not None:
+                baseline["_run_dir"] = self.config.metrics.baseline_run_dir
+            paper_metrics = aggregate_paper_metrics(
+                [
+                    m.get("_paper_metrics", {})
+                    for m in metrics
+                    if isinstance(m, dict)
+                ],
+                config=self.config.metrics,
+                baseline_metrics=baseline,
+                dataset_id=self.dataset.dataset_id,
+                agent_name=self.config.agent.name,
+                runs_root=self.config.metrics.domain_complexity_runs_root,
+            )
+            all_metrics["paper_metrics"] = paper_metrics
         if self.output_dir is not None:
             write_json(
                 all_metrics,

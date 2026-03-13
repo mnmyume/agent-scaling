@@ -1,0 +1,7 @@
+dataset_id: workbench
+from_langfuse: false
+local_path: datasets/workbench.json
+templates_local_path: prompts/dataset-shared/workbench.yaml
+env:
+  name: workbench
+  tools: []

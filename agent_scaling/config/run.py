@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field, model_validator
 
 from agent_scaling.agents import AgentSystem, get_agent_cls
 from agent_scaling.langfuse_client import get_lf_client
+from agent_scaling.metrics import PaperMetricsConfig
+from agent_scaling.logger import logger
 from agent_scaling.utils import (
     disable_local_cache,
     enable_local_cache,
@@ -22,6 +24,9 @@ class MultiAgentResearchConfig(BaseModel):
     min_searches_per_agent: int = 3
     min_iterations_per_agent: int = 3
     max_iterations_per_agent: int = 7
+    max_rounds: Optional[int] = None
+    enable_peer_communication: Optional[bool] = None
+    consensus_threshold: Optional[float] = None
     task_blurb: Optional[str] = None
     orchestrator_llm: Optional[LLMOverride] = None
     subagent_llm: Optional[LLMOverride] = None
@@ -91,6 +96,7 @@ class RunConfig(BaseModel):
     debug: bool = False
     max_instances: Optional[int] = None
     num_workers: int = 1
+    metrics: PaperMetricsConfig = Field(default_factory=PaperMetricsConfig)
 
     @property
     def run_parallel(self) -> bool:
@@ -98,9 +104,15 @@ class RunConfig(BaseModel):
 
     def model_post_init(self, context: Any) -> None:
         client = get_lf_client()
+        if self.log_langfuse and not self.dataset.from_langfuse:
+            logger.warning(
+                "log_langfuse requested but dataset.from_langfuse is False; disabling Langfuse logging."
+            )
         self.log_langfuse = (
-            self.log_langfuse and client is not None
-            # and self.dataset.langfuse_dataset is not None
+            self.log_langfuse
+            and self.dataset.from_langfuse
+            and client is not None
+            and self.dataset.langfuse_dataset is not None
         )
         if not self.log_langfuse and not self.run_parallel:
             enable_local_logging(prompt_only=True)
@@ -138,13 +150,66 @@ class RunConfig(BaseModel):
         )
 
     def get_run_metadata(self) -> Dict[str, Any]:
+        agent_meta = self.agent.get_run_metadata()
+        if self.agent.agent_specific_config is not None:
+            agent_meta["config"] = self.agent.agent_specific_config.model_dump(
+                exclude_none=True
+            )
+        agent_meta["effective_llms"] = self._get_effective_agent_llms()
         ret: Dict[str, Any] = {
-            "agent": self.agent.get_run_metadata(),
+            "agent": agent_meta,
             "llm": self.llm.model_dump(exclude_none=True),
             "dataset": self.dataset.model_dump(exclude_none=True),
+            "metrics": self.metrics.model_dump(exclude_none=True),
         }
         if self.save_dir is not None:
             ret["save_dir"] = self.save_dir
         ret["run_name"] = self.run_name
         ret["num_workers"] = self.num_workers
         return ret
+
+    def _get_effective_agent_llms(self) -> Dict[str, Any]:
+        base_llm = self.llm
+        effective: Dict[str, Any] = {
+            "base": base_llm.model_dump(exclude_none=True),
+        }
+        cfg = self.agent.agent_specific_config
+        if cfg is None:
+            return effective
+
+        # Orchestrator (for centralized/hybrid style agents)
+        if cfg.orchestrator_llm is not None:
+            effective["orchestrator"] = cfg.orchestrator_llm.merge(base_llm).model_dump(
+                exclude_none=True
+            )
+        elif self.agent.name in {
+            "multi-agent-centralized",
+            "multi-agent-hybrid",
+            "multi-agent-research",
+        }:
+            effective["orchestrator"] = base_llm.model_dump(exclude_none=True)
+
+        # Subagents
+        if cfg.subagent_llms is not None:
+            effective["subagents"] = [
+                override.merge(base_llm).model_dump(exclude_none=True)
+                for override in cfg.subagent_llms
+            ]
+        else:
+            default_sub = (
+                cfg.subagent_llm.merge(base_llm)
+                if cfg.subagent_llm is not None
+                else base_llm
+            )
+            num_agents = cfg.n_base_agents or 0
+            if num_agents:
+                effective["subagents"] = [
+                    default_sub.model_dump(exclude_none=True)
+                    for _ in range(num_agents)
+                ]
+            else:
+                effective["subagents"] = [
+                    default_sub.model_dump(exclude_none=True)
+                ]
+
+        return effective

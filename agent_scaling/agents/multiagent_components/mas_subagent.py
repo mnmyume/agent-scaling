@@ -1,6 +1,6 @@
 import threading
 import traceback
-from typing import Any, Dict, cast
+from typing import Any, Dict, Literal, Optional, cast
 
 from langchain_core.messages import AIMessage
 from langchain_core.messages.utils import convert_to_openai_messages
@@ -26,6 +26,7 @@ class WorkerSubagent(BaseAgentWithTools):
         original_query: str,
         strategy: str,
         task_instance: DatasetInstance,
+        guidance_template: str = "start_with_orchestrator_guidance",
         min_iterations_per_agent: int = 3,
         max_iterations_per_agent: int = 10,
         **kwargs,
@@ -41,6 +42,7 @@ class WorkerSubagent(BaseAgentWithTools):
         self.min_iterations_per_agent = min_iterations_per_agent
         self.max_iterations_per_agent = max_iterations_per_agent
         self.task_instance = task_instance
+        self.guidance_template = guidance_template
         self.env, self.llm_w_tools = self.init_environment(task_instance, agent_id)
         self.shared_prompt_templates = self.get_dataset_prompt_templates(self.env)
         # Conversation management
@@ -56,13 +58,13 @@ class WorkerSubagent(BaseAgentWithTools):
     def init_from_agent(
         cls,
         agent: BaseAgentWithTools,
-        llm_override: LLMConfig | Dict[str, Any] | ChatLiteLLMLC | None = None,
         agent_id: str,
         objective: str,
         original_query: str,
         strategy: str,
         min_iterations_per_agent: int = 3,
         max_iterations_per_agent: int = 10,
+        llm_override: LLMConfig | Dict[str, Any] | ChatLiteLLMLC | None = None,
         **kwargs,
     ):
         llm = (
@@ -86,15 +88,18 @@ class WorkerSubagent(BaseAgentWithTools):
             **kwargs,
         )
 
-    def _run_one_round(self, message: str) -> SubAgentRoundResult:
+    def _run_one_round(
+        self, message: str, guidance_template: Optional[str] = None
+    ) -> SubAgentRoundResult:
         """Process the task by calling tools with proper conversation state management"""
         logger.info(f"Agent {self.agent_id} starting process")
         logger.info(f"Agent {self.agent_id} objective: {self.objective}")
 
         # Compile the prompt using shared templates exactly like single agent
+        template_name = guidance_template or self.guidance_template
         messages = (
             self.prompts["subagent"]
-            .get_template("start_with_orchestrator_guidance")
+            .get_template(template_name)
             .compile(
                 orchestrator_objective=self.objective,
                 orchestrator_guidance=message,
@@ -135,6 +140,7 @@ class WorkerSubagent(BaseAgentWithTools):
                 self.conv_history.add_internal_message(
                     message=response_msg,  # type: ignore
                     iteration_num=curr_iteration,
+                    litellm_message=response.response_metadata.get("litellm_response"),
                 )
                 try:
                     # Execute tool with retry logic
@@ -205,6 +211,7 @@ class WorkerSubagent(BaseAgentWithTools):
         self.conv_history.add_internal_message(
             message=convert_to_openai_messages(llm_response),  # type: ignore
             iteration_num=curr_iteration,
+            litellm_message=llm_response.response_metadata.get("litellm_response"),
         )
         logger.info(
             f"Agent {self.agent_id} completed round {self.conv_history.current_round} (n_iterations={self.conv_history.curr_iteration}). Findings:\n{llm_response.text()} "
@@ -216,15 +223,20 @@ class WorkerSubagent(BaseAgentWithTools):
             env_status=self.env.env_status(),
         )
 
-    def process_orchestrator_message(self, message: str) -> SubAgentRoundResult:
-        """Process a message from orchestrator with conversation persistence and proper error handling"""
+    def process_orchestrator_message(
+        self,
+        message: str,
+        role: Literal["lead_agent", "subagent"] = "lead_agent",
+        guidance_template: Optional[str] = None,
+    ) -> SubAgentRoundResult:
+        """Process a message from the lead agent with conversation persistence."""
         # Increment round counter for new orchestrator message
         self.conv_history.start_new_round()
         logger.info(
             f"Agent {self.agent_id} ({self.strategy}) processing message for round {self.conv_history.current_round}"
         )
-        self.conv_history.add_external_message("lead_agent", message)
-        round_result = self._run_one_round(message)
+        self.conv_history.add_external_message(role, message)
+        round_result = self._run_one_round(message, guidance_template=guidance_template)
         self.conv_history.add_external_message("subagent", round_result.findings)
 
         if self.env.env_done():
@@ -233,6 +245,14 @@ class WorkerSubagent(BaseAgentWithTools):
             self.conv_history.status = "rate_limited"
 
         return round_result
+
+    def process_peer_message(self, message: str) -> SubAgentRoundResult:
+        """Process a peer-to-peer message (no hierarchy)."""
+        return self.process_orchestrator_message(
+            message,
+            role="subagent",
+            guidance_template="start_with_peer_guidance",
+        )
 
     def should_stop_due_to_rate_limiting(self) -> bool:
         """Check if agent should stop due to excessive rate limiting"""

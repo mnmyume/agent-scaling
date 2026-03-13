@@ -10,6 +10,7 @@ from agent_scaling.config.llm import LLMParams
 from agent_scaling.datasets import DatasetInstance
 from agent_scaling.datasets.base import DatasetInstanceOutput
 from agent_scaling.env import BasicEnvironment
+from agent_scaling.metrics import MetricsArtifacts, extract_usage_from_ai_message
 from agent_scaling.utils import write_yaml
 
 
@@ -37,6 +38,10 @@ class SingleAgentZeroShotCoT(AgentSystem):
         response_reasoning: AIMessage = cast(
             AIMessage, self.llm.invoke(prompt_reasoning, **llm_params_dict)
         )
+        llm_calls = []
+        usage = extract_usage_from_ai_message(response_reasoning)
+        if usage is not None:
+            llm_calls.append(usage)
         prompt_info_answer = {
             **prompt_info_reasoning,
             "reasoning": response_reasoning.text(),
@@ -46,6 +51,19 @@ class SingleAgentZeroShotCoT(AgentSystem):
         response_answer: AIMessage = cast(
             AIMessage, self.llm.invoke(prompt_answer, **llm_params_dict)
         )
+        usage = extract_usage_from_ai_message(response_answer)
+        if usage is not None:
+            llm_calls.append(usage)
+        metrics_artifacts = MetricsArtifacts(
+            llm_calls=llm_calls,
+            tool_calls=0,
+            reasoning_turns=0,
+            inter_agent_messages=0,
+            final_output=response_answer.text(),
+            pre_state_text=response_reasoning.text(),
+            post_state_text=response_answer.text(),
+        )
+        metrics_artifacts.finalize()
         if instance_dir is not None:
             out = {
                 "reasoning": response_reasoning.text(),
@@ -57,7 +75,9 @@ class SingleAgentZeroShotCoT(AgentSystem):
                 use_long_str_representer=True,
             )
         return DatasetInstanceOutput(
-            data_instance=instance, agent_output=response_answer.text()
+            data_instance=instance,
+            agent_output=response_answer.text(),
+            metrics_artifacts=metrics_artifacts,
         )
 
 
@@ -85,6 +105,10 @@ class SingleAgentZeroShotCoTWithTools(AgentSystemWithTools[BasicEnvironment]):
             AIMessage,
             self.llm_w_tools.invoke(chat_msgs, **llm_params_dict),  # type: ignore
         )
+        llm_calls = []
+        usage = extract_usage_from_ai_message(response_reasoning)
+        if usage is not None:
+            llm_calls.append(usage)
         chat_msgs.append(convert_to_openai_messages(response_reasoning))  # type: ignore
 
         tools_called = []
@@ -102,6 +126,19 @@ class SingleAgentZeroShotCoTWithTools(AgentSystemWithTools[BasicEnvironment]):
         chat_msgs.extend(self.prompts["final_answer"].compile())
 
         response_answer: AIMessage = self.llm.invoke(chat_msgs, **llm_params_dict)
+        usage = extract_usage_from_ai_message(response_answer)
+        if usage is not None:
+            llm_calls.append(usage)
+        metrics_artifacts = MetricsArtifacts(
+            llm_calls=llm_calls,
+            tool_calls=len(tools_called),
+            reasoning_turns=len(tools_called),
+            inter_agent_messages=0,
+            final_output=response_answer.text(),
+            pre_state_text=response_reasoning.text(),
+            post_state_text=response_answer.text(),
+        )
+        metrics_artifacts.finalize()
         chat_msgs.append(convert_to_openai_messages(response_answer))  # type: ignore
         if instance_dir is not None:
             out = {
@@ -115,5 +152,7 @@ class SingleAgentZeroShotCoTWithTools(AgentSystemWithTools[BasicEnvironment]):
                 use_long_str_representer=True,
             )
         return DatasetInstanceOutput(
-            data_instance=instance, agent_output=response_answer.text()
+            data_instance=instance,
+            agent_output=response_answer.text(),
+            metrics_artifacts=metrics_artifacts,
         )

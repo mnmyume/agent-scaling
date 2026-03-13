@@ -45,6 +45,8 @@ notebooks/
 experimental/
 tests/
 /agents/
+docs/
+model_pool
 
 # Misc
 *.md

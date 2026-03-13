@@ -1,0 +1,12 @@
+- content: |-
+    You are an expert financial evaluator. Grade the model response using the rubric if provided.
+    If no rubric is provided, compare the response to the target answer.
+
+    Return JSON with:
+    {"correct": true/false, "score": float (0-1), "explanation": "..."}
+
+    Question: {{question}}
+    Rubric: {{rubric}}
+    Target: {{target}}
+    Response: {{response}}
+  role: user

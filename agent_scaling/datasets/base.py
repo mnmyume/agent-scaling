@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from agent_scaling.config.prompts import Prompt
 from agent_scaling.llm import ChatLiteLLMLC
+from agent_scaling.metrics.artifacts import MetricsArtifacts
 from agent_scaling.utils import read_json, read_yaml, write_json, write_yaml
 
 
@@ -40,6 +41,7 @@ class TrajectoryStep(BaseModel):
 class DatasetInstanceOutput(BaseModel, Generic[T]):
     data_instance: T
     agent_output: str | Any
+    metrics_artifacts: Optional[MetricsArtifacts] = None
 
 
 class DatasetInstanceOutputWithTrajectory(DatasetInstanceOutput[T], Generic[T]):

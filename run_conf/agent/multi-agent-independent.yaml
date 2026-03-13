@@ -1,0 +1,10 @@
+name: multi-agent-independent
+prompts:
+  main:
+    local_path: prompts/single-agent/single-agent.yaml
+
+# Independent multi-agent parameters
+n_base_agents: 3
+min_iterations_per_agent: 3
+max_iterations_per_agent: 10
+# synthesis_only aggregation (no consensus voting)

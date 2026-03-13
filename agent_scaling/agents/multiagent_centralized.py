@@ -9,6 +9,7 @@ from agent_scaling.config.llm import LLMParams
 from agent_scaling.datasets import DatasetInstance, DatasetInstanceOutputWithTrajectory
 from agent_scaling.logger import logger
 from agent_scaling.llm import ChatLiteLLMLC
+from agent_scaling.metrics.orchestration import build_metrics_artifacts_from_orchestration
 from agent_scaling.utils import write_yaml
 
 from .multiagent_components.conversation import OrchestrationResult
@@ -137,9 +138,11 @@ class CentralizedMultiAgentSystem(AgentSystemWithTools):
             )
 
         # Return DatasetInstanceOutputWithTrajectory like single_agent.py
+        metrics_artifacts = build_metrics_artifacts_from_orchestration(processing_result)
         return DatasetInstanceOutputWithTrajectory(
             data_instance=instance,
             agent_output=final_answer,
             trajectory=[],  # Multi-agent doesn't have a single trajectory
             final_env_output=processing_result.combined_env_status,
+            metrics_artifacts=metrics_artifacts,
         )

@@ -1,0 +1,36 @@
+defaults:
+  - _self_
+  - agent: multi-agent-independent
+  - dataset: plancraft-test
+
+llm:
+  model: gemini/gemini-2.5-flash
+  params:
+    temperature: 0.0
+
+# Independent architecture settings
+agent:
+  n_base_agents: 3
+  subagent_llms:
+    - model: gemini/gemini-2.5-flash
+      params:
+        temperature: 0.0
+    - model: gemini/gemini-2.5-flash
+      params:
+        temperature: 0.0
+    - model: gemini/gemini-2.5-flash
+      params:
+        temperature: 0.0
+
+log_langfuse: true
+use_disk_cache: true
+num_workers: 1
+max_instances: 1
+
+run_name: independent_plancraft_${llm.model}_${now:%Y-%m-%d}_${now:%H-%M-%S}
+
+hydra:
+  verbose: false
+  run:
+    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm.model}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+hydra/job_logging: disabled

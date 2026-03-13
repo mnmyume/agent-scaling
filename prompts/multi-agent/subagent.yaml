@@ -7,7 +7,7 @@ base:
 
       {{task_behavior}}
 
-      You are working as part of a multi-agent team. Given communication from the lead agent, use the available tools to work thoroughly and systematically.
+      You are working as part of a multi-agent team. Given communication from teammates (lead or peer), use the available tools to work thoroughly and systematically.
 
       CRITICAL GUIDELINES:
       1. ALWAYS USE TOOLS: You must use tools in every response to make progress
@@ -37,6 +37,16 @@ start_with_orchestrator_guidance:
       Objective: 
       {{orchestrator_objective}}
       Guidance: 
+      {{orchestrator_guidance}}
+      Begin!
+    role: user
+
+start_with_peer_guidance:
+  - content: |-
+      You are coordinating with peer agents. Use the shared objective and peer message below.
+      Objective:
+      {{orchestrator_objective}}
+      Peer Message:
       {{orchestrator_guidance}}
       Begin!
     role: user
