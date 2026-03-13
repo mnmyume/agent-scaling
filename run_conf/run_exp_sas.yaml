@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - agent: single-agent
-  - dataset: plancraft-test
+  - dataset: finance-agent
 
 llm:
   model: openrouter/qwen/qwen3-30b-a3b-instruct-2507
@@ -13,9 +13,9 @@ llm_tag: ${make_llm_tag:${agent},${llm}}
 log_langfuse: false
 use_disk_cache: true
 num_workers: 1
-max_instances: 1
+max_instances: 50
 
-run_name: sas_plancraft_${llm_tag}_${now:%Y-%m-%d}_${now:%H-%M-%S}
+run_name: sas_finance_${llm_tag}_${now:%Y-%m-%d}_${now:%H-%M-%S}
 
 hydra:
   verbose: false

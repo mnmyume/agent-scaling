@@ -46,12 +46,20 @@ class FinanceAgentDataset(Dataset):
         with open(csv_path, "r", encoding="utf-8", newline="") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                question = (row.get("question") or "").strip()
-                answer = (row.get("answer") or "").strip()
-                rubric = row.get("rubric")
-                q_type = row.get("type")
-                expert_time = row.get("expert time to completion") or row.get(
-                    "expert_time_to_completion"
+                # Support multiple public CSV header variants (e.g. Question/Answer vs question/answer).
+                normalized_row = {
+                    str(k).strip().lower(): v for k, v in row.items() if k is not None
+                }
+                question = (normalized_row.get("question") or "").strip()
+                answer = (normalized_row.get("answer") or "").strip()
+                rubric = normalized_row.get("rubric")
+                q_type = normalized_row.get("type") or normalized_row.get(
+                    "question type"
+                )
+                expert_time = (
+                    normalized_row.get("expert time to completion")
+                    or normalized_row.get("expert_time_to_completion")
+                    or normalized_row.get("expert time (mins)")
                 )
 
                 if not question or not answer:
