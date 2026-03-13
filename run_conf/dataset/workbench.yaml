@@ -1,7 +1,8 @@
 dataset_id: workbench
 from_langfuse: false
-local_path: datasets/workbench.json
+local_path: datasets/workbench/workbench_all.csv
 templates_local_path: prompts/dataset-shared/workbench.yaml
 env:
   name: workbench
+  # Empty list means: use the full WorkBench tool set (+ done). See agent_scaling/env/workbench.py.
   tools: []

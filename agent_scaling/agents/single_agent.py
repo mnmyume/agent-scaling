@@ -77,7 +77,13 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
                     tool_resp = env.execute_tool(tool_call)
                     tool_name = tool_call["name"]
                     tool_input = tool_call["args"]
-                    action = f"{tool_name}({', '.join([f'{k}={v}' for k, v in tool_input.items()])})"
+                    # Use repr() so the action string is parseable (e.g., WorkBench evaluation)
+                    # and robust to commas/newlines in string arguments.
+                    action = (
+                        f"{tool_name}("
+                        + ", ".join([f"{k}={repr(v)}" for k, v in tool_input.items()])
+                        + ")"
+                    )
                     messages.append(convert_to_openai_messages(tool_resp))
                     is_done = tool_name == "done"
                 except Exception as e:

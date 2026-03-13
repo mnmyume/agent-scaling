@@ -1,36 +1,51 @@
 defaults:
   - _self_
   - agent: multi-agent-independent
-  - dataset: plancraft-test
+  - dataset: finance-agent
 
 llm:
   model: gemini/gemini-2.5-flash
   params:
     temperature: 0.0
 
+llm_tag: ${make_llm_tag:${agent},${llm}}
+
 # Independent architecture settings
 agent:
   n_base_agents: 3
   subagent_llms:
-    - model: gemini/gemini-2.5-flash
+    - model: openrouter/qwen/qwen3-235b-a22b-2507
       params:
         temperature: 0.0
-    - model: gemini/gemini-2.5-flash
+    - model: openrouter/qwen/qwen3-235b-a22b-2507
       params:
         temperature: 0.0
-    - model: gemini/gemini-2.5-flash
+    - model: openrouter/qwen/qwen3-30b-a3b-instruct-2507
       params:
         temperature: 0.0
 
 log_langfuse: true
 use_disk_cache: true
 num_workers: 1
+debug: false
 max_instances: 1
 
-run_name: independent_plancraft_${llm.model}_${now:%Y-%m-%d}_${now:%H-%M-%S}
+metrics:
+  enable: true
+  strict_paper_alignment: true
+  similarity_mode: bert_score
+  contradiction_threshold: 0.3
+  redundancy_mode: embedding_cosine
+  redundancy_embedding_model: ${oc.env:PAPER_REDUNDANCY_EMBEDDING_MODEL,gemini/gemini-embedding-001}
+  baseline_run_dir: ${oc.env:PAPER_BASELINE_RUN_DIR,}
+  baseline_auto_discovery: true
+  baseline_selection_strategy: best_success
+  domain_complexity_runs_root: ${oc.env:PAPER_DOMAIN_RUNS_ROOT,}
+
+run_name: independent_${dataset.dataset_id}_${llm_tag}_${now:%Y-%m-%d}_${now:%H-%M-%S}
 
 hydra:
   verbose: false
   run:
-    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm.model}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm_tag}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 hydra/job_logging: disabled

@@ -1,8 +1,8 @@
+from __future__ import annotations
+
 import ast
-import json
-import math
-import re
-from datetime import date, datetime
+import csv
+import os
 from typing import Any, Dict, List, Optional, Union
 
 from agent_scaling.datasets.base import (
@@ -11,177 +11,193 @@ from agent_scaling.datasets.base import (
     DatasetInstanceOutputWithTrajectory,
 )
 from agent_scaling.datasets.registry import register_dataset, register_dataset_instance
+from agent_scaling.utils import get_root_dir
+from agent_scaling.workbench.sandbox import (
+    WorkbenchSandbox,
+    end_date_minor_error,
+    evaluate_actions,
+    format_func_call,
+    meeting_start_time_error,
+    parse_action_to_tool_and_args,
+)
 
-DATASET_IDS = ["workbench", "workbench_sampled"]
+DATASET_IDS = ["workbench"]
 
 
 @register_dataset_instance(DATASET_IDS)
 class WorkbenchInstance(DatasetInstance):
-    task: str
-    expected_calls: Optional[List[Dict[str, Any]]] = None
-    expected_tool_calls: Optional[List[Dict[str, Any]]] = None
-    tools: Optional[List[Dict[str, Any]]] = None
-    context: Optional[str] = None
-    task_id: Optional[str] = None
+    query: str
+    answer: List[str]
+    domains: Optional[List[str]] = None
+    subset: Optional[str] = None
+    base_template: Optional[str] = None
+    chosen_template: Optional[str] = None
 
-    def model_post_init(self, __context):
-        if self.expected_calls is None and self.expected_tool_calls is not None:
-            self.expected_calls = self.expected_tool_calls
-        if self.expected_calls is not None:
-            self.expected_output = self.expected_calls
+    def model_post_init(self, __context: Any) -> None:
+        self.expected_output = self.answer
 
     def get_prompt_info(self) -> Dict[str, str]:
-        return {
-            "task": self.task,
-            "context": self.context or "",
-        }
+        return {"query": self.query}
 
 
 @register_dataset(DATASET_IDS)
 class WorkbenchDataset(Dataset):
+    """WorkBench dataset.
+
+    Source: https://github.com/olly-styles/WorkBench (MIT License)
+    Paper: https://arxiv.org/abs/2405.00823
+    """
+
     dataset_id: str = "workbench"
     instances: List[WorkbenchInstance]
 
-    def _try_parse_date(self, value: str) -> Optional[date]:
-        value = value.strip()
-        for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%Y/%m/%d", "%b %d, %Y", "%B %d, %Y"):
-            try:
-                return datetime.strptime(value, fmt).date()
-            except Exception:
-                continue
-        return None
-
-    def _normalize_value(self, value: Any) -> Any:
-        if isinstance(value, (int, float)):
-            return float(value)
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            parsed_date = self._try_parse_date(value)
-            if parsed_date is not None:
-                return parsed_date
-            return value.strip().lower()
-        return value
-
-    def _values_equal(self, a: Any, b: Any) -> bool:
-        a_norm = self._normalize_value(a)
-        b_norm = self._normalize_value(b)
-        if isinstance(a_norm, date) and isinstance(b_norm, date):
-            return abs((a_norm - b_norm).days) <= 1
-        if isinstance(a_norm, float) and isinstance(b_norm, float):
-            return math.isclose(a_norm, b_norm, rel_tol=1e-3, abs_tol=1e-3)
-        return a_norm == b_norm
-
-    def _normalize_call(self, call: Dict[str, Any]) -> Dict[str, Any]:
-        name = call.get("name") or call.get("tool") or call.get("tool_name")
-        args = call.get("args") or call.get("arguments") or call.get("parameters") or {}
-        if args is None:
-            args = {}
-        return {
-            "name": name,
-            "args": {k: self._normalize_value(v) for k, v in args.items()},
-        }
-
-    def _parse_action(self, action: str) -> Optional[Dict[str, Any]]:
-        if not action or "(" not in action or not action.endswith(")"):
-            return None
-        name, _, arg_str = action.partition("(")
-        name = name.strip()
-        arg_str = arg_str[:-1].strip()
-        args: Dict[str, Any] = {}
-        if arg_str:
-            parts = [p.strip() for p in arg_str.split(",") if p.strip()]
-            for part in parts:
-                if "=" not in part:
+    @classmethod
+    def from_csv(cls, csv_path: str, **kwargs) -> "WorkbenchDataset":
+        instances: List[WorkbenchInstance] = []
+        with open(csv_path, "r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                query = (row.get("query") or "").strip()
+                if not query:
                     continue
-                key, value = part.split("=", 1)
-                key = key.strip()
-                value = value.strip()
+                raw_answer = row.get("answer") or "[]"
+                raw_domains = row.get("domains") or "[]"
                 try:
-                    value_obj = ast.literal_eval(value)
+                    answer = ast.literal_eval(raw_answer)
                 except Exception:
-                    value_obj = value
-                args[key] = value_obj
-        return {"name": name, "args": args}
+                    answer = []
+                try:
+                    domains = ast.literal_eval(raw_domains)
+                except Exception:
+                    domains = []
+                if not isinstance(answer, list):
+                    answer = []
+                if not isinstance(domains, list):
+                    domains = []
+                instances.append(
+                    WorkbenchInstance(
+                        query=query,
+                        answer=[str(a) for a in answer],
+                        domains=[str(d) for d in domains],
+                        subset=row.get("subset") or None,
+                        base_template=row.get("base_template") or None,
+                        chosen_template=row.get("chosen_template") or None,
+                    )
+                )
+        return cls(instances=instances, **kwargs)
 
-    def _extract_pred_calls(
+    def _sandbox_factory(self) -> WorkbenchSandbox:
+        repo_root = get_root_dir()
+        data_dir = os.path.join(repo_root, "datasets", "workbench")
+        return WorkbenchSandbox(data_dir)
+
+    def _extract_predicted_actions(
         self, instance_output: DatasetInstanceOutputWithTrajectory[WorkbenchInstance]
-    ) -> List[Dict[str, Any]]:
-        calls: List[Dict[str, Any]] = []
-        if hasattr(instance_output, "trajectory") and instance_output.trajectory:
-            for step in instance_output.trajectory:
-                parsed = self._parse_action(step.action)
-                if parsed:
-                    calls.append(parsed)
-        else:
-            # Try to parse agent_output as JSON list
-            agent_output = instance_output.agent_output
-            if isinstance(agent_output, list):
-                calls = agent_output
-            elif isinstance(agent_output, str):
-                try:
-                    parsed = json.loads(agent_output)
-                    if isinstance(parsed, list):
-                        calls = parsed
-                except Exception:
-                    calls = []
-        # Filter out done calls
-        calls = [c for c in calls if (c.get("name") or c.get("tool")) != "done"]
-        return calls
-
-    def _calls_match(
-        self, expected: List[Dict[str, Any]], predicted: List[Dict[str, Any]]
-    ) -> bool:
-        if expected is None:
-            return False
-        exp_norm = [self._normalize_call(c) for c in expected]
-        pred_norm = [self._normalize_call(c) for c in predicted]
-        if len(exp_norm) != len(pred_norm):
-            return False
-        for exp, pred in zip(exp_norm, pred_norm):
-            if exp.get("name") != pred.get("name"):
-                return False
-            exp_args = exp.get("args", {})
-            pred_args = pred.get("args", {})
-            if set(exp_args.keys()) != set(pred_args.keys()):
-                return False
-            for key in exp_args.keys():
-                if not self._values_equal(exp_args[key], pred_args[key]):
-                    return False
-        return True
+    ) -> List[str]:
+        actions: List[str] = []
+        for step in getattr(instance_output, "trajectory", []) or []:
+            parsed = parse_action_to_tool_and_args(step.action)
+            if not parsed:
+                continue
+            tool_name, args, order = parsed
+            if tool_name == "done":
+                continue
+            actions.append(format_func_call(tool_name, args, arg_order=order))
+        return actions
 
     def get_instance_eval_output(
         self, instance_output: DatasetInstanceOutputWithTrajectory[WorkbenchInstance]
     ) -> Dict[str, Any]:
         instance = instance_output.data_instance
-        expected = instance.expected_calls or []
-        predicted = self._extract_pred_calls(instance_output)
+        predicted = self._extract_predicted_actions(instance_output)
+        ground_truth = instance.expected_output or []
         return {
-            "predicted_calls": predicted,
-            "expected_calls": expected,
+            "query": instance.query,
+            "predicted_actions": predicted,
+            "ground_truth_actions": ground_truth,
+            "subset": instance.subset,
+            "domains": instance.domains,
         }
 
     def get_instance_eval_metrics(
         self, instance_output: DatasetInstanceOutputWithTrajectory[WorkbenchInstance]
-    ) -> Dict[str, Union[int, float]]:
+    ) -> Dict[str, Union[int, float, str]]:
         instance = instance_output.data_instance
-        expected = instance.expected_calls or []
-        predicted = self._extract_pred_calls(instance_output)
-        correct = self._calls_match(expected, predicted)
+        ground_truth: List[str] = list(instance.expected_output or [])
+        predicted = self._extract_predicted_actions(instance_output)
+
+        # Some multi-agent systems don't currently return a single trajectory.
+        # In that case, fall back to environment-reported success (if any).
+        if not predicted and instance_output.final_env_output is not None:
+            correct = int(bool(instance_output.final_env_output.success))
+            return {
+                "correct": correct,
+                "exact_match": -1,
+                "unwanted_side_effects": -1,
+                "num_predicted_actions": 0,
+                "num_ground_truth_actions": len(ground_truth),
+                "subset": instance.subset or "",
+            }
+
+        eval_result = evaluate_actions(
+            predicted_actions=predicted,
+            ground_truth_actions=ground_truth,
+            sandbox_factory=self._sandbox_factory,
+        )
+
+        correct = int(eval_result.get("correct", 0))
+        exact_match = int(eval_result.get("exact_match", 0))
+        unwanted_side_effects = int(eval_result.get("unwanted_side_effects", 0))
+
+        # Error analysis fields used in the upstream evaluation script.
+        pred_str = str(predicted)
+        wrong_email = int(("@example" in pred_str) and ("@atlas" not in pred_str) and (not correct))
+        no_actions = int(len(predicted) == 0)
+        ed_minor = int(end_date_minor_error(ground_truth, predicted) and (not correct))
+        meeting_time_err = int(meeting_start_time_error(ground_truth, predicted) and (not correct))
+
         return {
-            "correct": int(correct),
-            "num_expected": len(expected),
-            "num_predicted": len(predicted),
+            "correct": correct,
+            "exact_match": exact_match,
+            "unwanted_side_effects": unwanted_side_effects,
+            "no_actions": no_actions,
+            "wrong_email": wrong_email,
+            "end_date_minor_error": ed_minor,
+            "meeting_start_time_error": meeting_time_err,
+            "num_predicted_actions": len(predicted),
+            "num_ground_truth_actions": len(ground_truth),
+            "subset": instance.subset or "",
         }
 
     def get_metrics(self, eval_outputs: List[Dict[str, Any] | str]) -> Dict[str, Any]:
-        num_instances = len(eval_outputs)
-        if num_instances == 0:
-            return {"success_rate": 0.0, "num_instances": 0}
+        rows = [e for e in eval_outputs if isinstance(e, dict)]
+        n = len(rows)
+        if n == 0:
+            return {
+                "accuracy": 0.0,
+                "exact_match_rate": 0.0,
+                "side_effect_rate": 0.0,
+                "num_instances": 0,
+            }
+
+        correct = [int(r.get("correct", 0)) for r in rows]
+        exact = [int(r.get("exact_match", 0)) for r in rows if int(r.get("exact_match", 0)) >= 0]
+        side = [
+            int(r.get("unwanted_side_effects", 0))
+            for r in rows
+            if int(r.get("unwanted_side_effects", 0)) >= 0
+        ]
+
+        accuracy = sum(correct) / n
+        exact_match_rate = (sum(exact) / len(exact)) if exact else 0.0
+        side_effect_rate = (sum(side) / len(side)) if side else 0.0
+
         return {
-            "success_rate": sum(
-                e.get("correct", 0) for e in eval_outputs if isinstance(e, dict)
-            )
-            / num_instances,
-            "num_instances": num_instances,
+            "accuracy": accuracy,
+            "exact_match_rate": exact_match_rate,
+            "side_effect_rate": side_effect_rate,
+            "num_instances": n,
+            "n_exact_match_measured": len(exact),
+            "n_side_effects_measured": len(side),
         }
+

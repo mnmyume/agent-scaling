@@ -13,15 +13,30 @@ llm:
   params:
     temperature: 0.0
 
+llm_tag: ${make_llm_tag:${agent},${llm}}
+
 log_langfuse: false
 use_disk_cache: true
 num_workers: 1 
 debug: true
 max_instances: 3
-run_name: ${agent.name}_${llm.model}_${now:%Y-%m-%d}_${now:%H-%M-%S}
+
+metrics:
+  enable: true
+  strict_paper_alignment: true
+  similarity_mode: bert_score
+  contradiction_threshold: 0.3
+  redundancy_mode: embedding_cosine
+  redundancy_embedding_model: ${oc.env:PAPER_REDUNDANCY_EMBEDDING_MODEL,gemini/gemini-embedding-001}
+  baseline_run_dir: ${oc.env:PAPER_BASELINE_RUN_DIR,}
+  baseline_auto_discovery: true
+  baseline_selection_strategy: best_success
+  domain_complexity_runs_root: ${oc.env:PAPER_DOMAIN_RUNS_ROOT,}
+
+run_name: ${agent.name}_${llm_tag}_${now:%Y-%m-%d}_${now:%H-%M-%S}
 
 hydra:
   verbose: false
   run:
-    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm.model}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm_tag}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 hydra/job_logging: disabled

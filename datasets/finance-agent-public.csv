@@ -1,0 +1,5 @@
+question,answer,rubric,type,expert time to completion
+"Given revenue of $100M and EBITDA of $25M, what is the EBITDA margin?","25%","Correctness:
+- The answer states an EBITDA margin of 25%.
+Contradiction:
+- The answer does not claim a different margin.","calculation","5"

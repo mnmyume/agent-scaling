@@ -1,6 +1,6 @@
 dataset_id: finance-agent
 from_langfuse: false
-local_path: datasets/finance-agent.json
+local_path: datasets/finance-agent-public.csv
 templates_local_path: prompts/dataset-shared/finance-agent.yaml
 eval_llm:
   model: gemini/gemini-2.5-flash
@@ -10,9 +10,10 @@ eval_prompts:
   grader:
     local_path: prompts/eval/finance-agent-grader.yaml
 env:
-  name: basic
+  name: finance-agent
   tools:
     - web_search
-    - python_repl
-    - multiply
+    - edgar_search
+    - parse_html_page
+    - retrieve_information
     - done

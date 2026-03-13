@@ -1,12 +1,12 @@
 - content: |-
-    You are an expert financial evaluator. Grade the model response using the rubric if provided.
-    If no rubric is provided, compare the response to the target answer.
+    You are an expert evaluator for a finance QA benchmark.
+    Determine whether the model response satisfies the given rubric criterion.
 
-    Return JSON with:
-    {"correct": true/false, "score": float (0-1), "explanation": "..."}
+    Return JSON exactly in this format:
+    {"satisfied": true/false, "explanation": "..."}
 
     Question: {{question}}
-    Rubric: {{rubric}}
-    Target: {{target}}
-    Response: {{response}}
+    Rubric Section: {{rubric_section}}
+    Criterion: {{criterion}}
+    Model Response: {{response}}
   role: user

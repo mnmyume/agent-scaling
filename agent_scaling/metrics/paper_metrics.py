@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import os
 import re
+from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, TYPE_CHECKING
 
 from pydantic import BaseModel
@@ -12,15 +13,26 @@ if TYPE_CHECKING:
 from agent_scaling.llm import ChatLiteLLMLC
 from agent_scaling.metrics.artifacts import MetricsArtifacts
 from agent_scaling.metrics.token_overlap import compute_token_overlap_metrics
-from agent_scaling.metrics.similarity import pairwise_cosine_similarities
+from agent_scaling.metrics.similarity import (
+    pairwise_cosine_similarities,
+    pairwise_embedding_cosine_similarities,
+)
 from agent_scaling.utils import read_json, read_yaml
 
 
 class PaperMetricsConfig(BaseModel):
     enable: bool = True
     baseline_run_dir: Optional[str] = None
-    similarity_mode: str = "auto"
+    baseline_auto_discovery: bool = True
+    baseline_runs_root: Optional[str] = None
+    baseline_selection_strategy: str = "best_success"
+    baseline_require_same_max_instances: bool = True
+    similarity_mode: str = "bert_score"
     contradiction_threshold: float = 0.3
+    strict_paper_alignment: bool = True
+    redundancy_mode: str = "embedding_cosine"
+    redundancy_embedding_model: Optional[str] = None
+    redundancy_embedding_batch_size: int = 16
     compute_information_gain: bool = False
     info_gain_samples: int = 10
     info_gain_temperature: float = 0.7
@@ -59,10 +71,38 @@ def extract_success_rate(metrics: Dict[str, Any]) -> Optional[float]:
     return None
 
 
-def compute_redundancy(texts: List[str]) -> Optional[float]:
+def compute_redundancy(
+    texts: List[str], config: PaperMetricsConfig
+) -> Optional[float]:
     if len(texts) < 2:
         return 0.0
-    sims = pairwise_cosine_similarities(texts)
+
+    if config.redundancy_mode == "embedding_cosine":
+        if not config.redundancy_embedding_model:
+            if config.strict_paper_alignment:
+                raise ValueError(
+                    "Strict paper alignment requires `metrics.redundancy_embedding_model` "
+                    "for embedding-based redundancy."
+                )
+            sims = pairwise_cosine_similarities(texts)
+        else:
+            sims = pairwise_embedding_cosine_similarities(
+                texts,
+                embedding_model=config.redundancy_embedding_model,
+                batch_size=config.redundancy_embedding_batch_size,
+            )
+    elif config.redundancy_mode == "lexical_cosine":
+        if config.strict_paper_alignment:
+            raise ValueError(
+                "Strict paper alignment does not allow lexical redundancy mode. "
+                "Set `metrics.redundancy_mode=embedding_cosine`."
+            )
+        sims = pairwise_cosine_similarities(texts)
+    else:
+        raise ValueError(
+            "Unsupported `redundancy_mode`. Use `embedding_cosine` or `lexical_cosine`."
+        )
+
     if not sims:
         return None
     return sum(sims) / len(sims)
@@ -86,6 +126,141 @@ def load_baseline_metrics(baseline_run_dir: Optional[str]) -> Optional[Dict[str,
     if not os.path.exists(metrics_path):
         return None
     return read_json(metrics_path)
+
+
+def _default_runs_root() -> str:
+    # Resolve to repository-level exp_outputs irrespective of Hydra cwd.
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "exp_outputs"))
+
+
+def _extract_run_timestamp(run_dir: str) -> datetime:
+    normalized = run_dir.replace("\\", "/")
+    parts = normalized.split("/")
+    # Expected tail shape: .../<YYYY-MM-DD>/<HH-MM-SS>
+    for idx in range(len(parts) - 2, -1, -1):
+        date_part = parts[idx]
+        time_part = parts[idx + 1] if idx + 1 < len(parts) else ""
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_part) and re.fullmatch(
+            r"\d{2}-\d{2}-\d{2}", time_part
+        ):
+            try:
+                return datetime.strptime(f"{date_part} {time_part}", "%Y-%m-%d %H-%M-%S")
+            except ValueError:
+                break
+    return datetime.fromtimestamp(os.path.getmtime(run_dir))
+
+
+def _to_optional_int(value: Any) -> Optional[int]:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        return int(text)
+    except ValueError:
+        return None
+
+
+def discover_single_agent_baseline_run(
+    dataset_id: str,
+    runs_root: Optional[str],
+    selection_strategy: str = "best_success",
+    allowed_models: Optional[List[str]] = None,
+    require_same_max_instances: bool = False,
+    required_max_instances: Optional[int] = None,
+) -> Optional[str]:
+    root_dir = runs_root or _default_runs_root()
+    if not os.path.isdir(root_dir):
+        return None
+
+    strategy = selection_strategy.strip().lower()
+    if strategy not in {"best_success", "latest"}:
+        raise ValueError(
+            "Unsupported `baseline_selection_strategy`. Use `best_success` or `latest`."
+        )
+    allowed_set = {m.strip() for m in (allowed_models or []) if m and m.strip()}
+
+    candidates: List[Dict[str, Any]] = []
+    for root, _, files in os.walk(root_dir):
+        if "dataset_eval_metrics.json" not in files or "run_config.yaml" not in files:
+            continue
+        run_config_path = os.path.join(root, "run_config.yaml")
+        try:
+            run_config = read_yaml(run_config_path)
+        except Exception:
+            continue
+
+        if run_config.get("dataset", {}).get("dataset_id") != dataset_id:
+            continue
+        if require_same_max_instances:
+            candidate_max_instances = _to_optional_int(run_config.get("max_instances"))
+            if candidate_max_instances != required_max_instances:
+                continue
+        agent_name = run_config.get("agent", {}).get("name", "")
+        if not agent_name.startswith("single-agent"):
+            continue
+        model_name = str(run_config.get("llm", {}).get("model", "")).strip()
+        if allowed_set and model_name not in allowed_set:
+            continue
+
+        metrics = read_json(os.path.join(root, "dataset_eval_metrics.json"))
+        success_rate = extract_success_rate(metrics)
+        if success_rate is None:
+            continue
+
+        candidates.append(
+            {
+                "run_dir": root,
+                "success_rate": success_rate,
+                "timestamp": _extract_run_timestamp(root),
+                "model": model_name,
+            }
+        )
+
+    if not candidates:
+        return None
+
+    if strategy == "latest":
+        selected = max(candidates, key=lambda c: c["timestamp"])
+    else:
+        selected = max(candidates, key=lambda c: (c["success_rate"], c["timestamp"]))
+    return str(selected["run_dir"])
+
+
+def resolve_baseline_metrics(
+    config: PaperMetricsConfig,
+    dataset_id: Optional[str],
+    default_runs_root: Optional[str] = None,
+    allowed_models: Optional[List[str]] = None,
+    current_max_instances: Optional[int] = None,
+) -> Optional[Dict[str, Any]]:
+    baseline_run_dir = config.baseline_run_dir
+    source = "manual"
+    if (
+        not baseline_run_dir
+        and config.baseline_auto_discovery
+        and dataset_id
+    ):
+        baseline_run_dir = discover_single_agent_baseline_run(
+            dataset_id=dataset_id,
+            runs_root=config.baseline_runs_root or default_runs_root,
+            selection_strategy=config.baseline_selection_strategy,
+            allowed_models=allowed_models,
+            require_same_max_instances=config.baseline_require_same_max_instances,
+            required_max_instances=current_max_instances,
+        )
+        source = "auto_discovery"
+
+    baseline = load_baseline_metrics(baseline_run_dir)
+    if baseline is not None:
+        baseline["_run_dir"] = baseline_run_dir
+        baseline["_source"] = source
+    return baseline
 
 
 def compute_domain_complexity_from_runs(
@@ -280,8 +455,15 @@ def compute_instance_paper_metrics(
     artifacts: Optional[MetricsArtifacts] = getattr(output, "metrics_artifacts", None)
     reasoning_turns = None
     inter_agent_messages = None
+    prompt_tokens = None
+    completion_tokens = None
     total_tokens = None
     total_cost = None
+    total_provider_cost = None
+    total_openrouter_cost = None
+    llm_call_count = None
+    total_response_time_ms = None
+    avg_response_time_ms = None
     redundancy = None
     token_overlap: Optional[Dict[str, float]] = None
     info_gain = None
@@ -290,14 +472,22 @@ def compute_instance_paper_metrics(
     if artifacts:
         reasoning_turns = artifacts.reasoning_turns or artifacts.tool_calls
         inter_agent_messages = artifacts.inter_agent_messages
+        prompt_tokens = artifacts.total_input_tokens
+        completion_tokens = artifacts.total_output_tokens
         total_tokens = artifacts.total_tokens
         total_cost = artifacts.total_cost_usd
+        total_provider_cost = artifacts.total_provider_cost_usd
+        total_openrouter_cost = artifacts.total_openrouter_cost_usd
+        llm_call_count = artifacts.llm_call_count
+        total_response_time_ms = artifacts.total_latency_ms
+        avg_response_time_ms = artifacts.avg_latency_ms
         if artifacts.subagent_outputs:
-            redundancy = compute_redundancy(artifacts.subagent_outputs)
+            redundancy = compute_redundancy(artifacts.subagent_outputs, config)
             token_overlap = compute_token_overlap_metrics(
                 artifacts.subagent_outputs,
                 contradiction_threshold=config.contradiction_threshold,
                 similarity_mode=config.similarity_mode,
+                strict_paper_alignment=config.strict_paper_alignment,
             )
         else:
             redundancy = 0.0
@@ -333,6 +523,12 @@ def compute_instance_paper_metrics(
     success_per_usd = None
     if success is not None and total_cost and total_cost > 0:
         success_per_usd = success / total_cost
+    success_per_provider_usd = None
+    if success is not None and total_provider_cost and total_provider_cost > 0:
+        success_per_provider_usd = success / total_provider_cost
+    success_per_openrouter_usd = None
+    if success is not None and total_openrouter_cost and total_openrouter_cost > 0:
+        success_per_openrouter_usd = success / total_openrouter_cost
 
     return {
         "success": success,
@@ -340,10 +536,19 @@ def compute_instance_paper_metrics(
         "reasoning_turns": reasoning_turns,
         "inter_agent_messages": inter_agent_messages,
         "message_density": message_density,
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
         "total_tokens": total_tokens,
+        "llm_call_count": llm_call_count,
+        "total_response_time_ms": total_response_time_ms,
+        "avg_response_time_ms": avg_response_time_ms,
         "total_cost_usd": total_cost,
+        "total_provider_cost_usd": total_provider_cost,
+        "total_openrouter_cost_usd": total_openrouter_cost,
         "success_per_1k_tokens": success_per_1k_tokens,
         "success_per_usd": success_per_usd,
+        "success_per_provider_usd": success_per_provider_usd,
+        "success_per_openrouter_usd": success_per_openrouter_usd,
         "redundancy": redundancy,
         "token_overlap": token_overlap,
         "information_gain": info_gain,
@@ -364,8 +569,14 @@ def aggregate_paper_metrics(
     reasoning_turns = [m.get("reasoning_turns") for m in instance_metrics]
     inter_agent_messages = [m.get("inter_agent_messages") for m in instance_metrics]
     message_density = [m.get("message_density") for m in instance_metrics]
+    prompt_tokens = [m.get("prompt_tokens") for m in instance_metrics]
+    completion_tokens = [m.get("completion_tokens") for m in instance_metrics]
     total_tokens = [m.get("total_tokens") for m in instance_metrics]
+    llm_call_counts = [m.get("llm_call_count") for m in instance_metrics]
+    total_response_times = [m.get("total_response_time_ms") for m in instance_metrics]
     total_cost = [m.get("total_cost_usd") for m in instance_metrics]
+    total_provider_cost = [m.get("total_provider_cost_usd") for m in instance_metrics]
+    total_openrouter_cost = [m.get("total_openrouter_cost_usd") for m in instance_metrics]
     redundancy = [m.get("redundancy") for m in instance_metrics]
     info_gain_values = [m.get("information_gain") for m in instance_metrics]
 
@@ -387,7 +598,15 @@ def aggregate_paper_metrics(
     avg_redundancy = _mean(redundancy)
     avg_information_gain = _mean(info_gain_values)
 
+    total_prompt_tokens_sum = _sum(prompt_tokens)
+    total_completion_tokens_sum = _sum(completion_tokens)
     total_tokens_sum = _sum(total_tokens)
+    total_llm_calls = int(_sum(llm_call_counts))
+    total_response_time_ms_sum = _sum(total_response_times)
+    avg_response_time_ms = None
+    if total_llm_calls > 0:
+        avg_response_time_ms = total_response_time_ms_sum / total_llm_calls
+    avg_instance_response_time_ms = _mean(total_response_times)
     total_cost_sum = _sum(total_cost)
     successes_sum = _sum(success_values)
 
@@ -398,6 +617,16 @@ def aggregate_paper_metrics(
     success_per_usd = None
     if total_cost_sum > 0:
         success_per_usd = successes_sum / total_cost_sum
+    total_provider_cost_sum = _sum(total_provider_cost)
+    total_openrouter_cost_sum = _sum(total_openrouter_cost)
+
+    success_per_provider_usd = None
+    if total_provider_cost_sum > 0:
+        success_per_provider_usd = successes_sum / total_provider_cost_sum
+
+    success_per_openrouter_usd = None
+    if total_openrouter_cost_sum > 0:
+        success_per_openrouter_usd = successes_sum / total_openrouter_cost_sum
 
     baseline = baseline_metrics.get("paper_metrics") if baseline_metrics else None
     baseline_turns = baseline.get("avg_reasoning_turns") if baseline else None
@@ -466,8 +695,18 @@ def aggregate_paper_metrics(
         "avg_information_gain": avg_information_gain,
         "success_per_1k_tokens": success_per_1k_tokens,
         "success_per_usd": success_per_usd,
+        "total_prompt_tokens": total_prompt_tokens_sum,
+        "total_completion_tokens": total_completion_tokens_sum,
         "total_tokens": total_tokens_sum,
+        "llm_call_count": total_llm_calls,
+        "total_response_time_ms": total_response_time_ms_sum,
+        "avg_response_time_ms": avg_response_time_ms,
+        "avg_instance_response_time_ms": avg_instance_response_time_ms,
         "total_cost_usd": total_cost_sum,
+        "total_provider_cost_usd": total_provider_cost_sum,
+        "total_openrouter_cost_usd": total_openrouter_cost_sum,
+        "success_per_provider_usd": success_per_provider_usd,
+        "success_per_openrouter_usd": success_per_openrouter_usd,
         "coordination_overhead_percent": coordination_overhead,
         "coordination_efficiency": coordination_efficiency,
         "error_amplification": error_amplification,
@@ -476,4 +715,5 @@ def aggregate_paper_metrics(
         "error_taxonomy_counts": error_taxonomy_counts,
         "domain_complexity": domain_complexity,
         "baseline_run_dir": baseline_metrics.get("_run_dir") if baseline_metrics else None,
+        "baseline_source": baseline_metrics.get("_source") if baseline_metrics else None,
     }

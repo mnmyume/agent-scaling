@@ -8,6 +8,9 @@ from hydra.conf import HydraConf
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
+# Register OmegaConf resolvers used by run_conf/*.yaml (e.g., make_llm_tag).
+import agent_scaling.hydra_resolvers  # noqa: F401
+
 from agent_scaling.config.run import RunConfig
 from agent_scaling.exp_runner import ExperimentRunner
 from agent_scaling.logger import add_sink, logger

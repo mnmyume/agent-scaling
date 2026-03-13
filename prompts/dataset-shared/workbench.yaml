@@ -1,8 +1,14 @@
 task_description_template: |-
-  You are a business operations assistant. Use the available tools to complete the task.
+  You are a workplace operations assistant. Use the available tools to complete the task.
+
+  Today's date is {{current_weekday}}, {{current_date}} and the current time is {{current_time}}.
+  {{meeting_constraints}}
 
 task_description_with_tools_template: |-
-  You are a business operations assistant. Use the available tools to complete the task.
+  You are a workplace operations assistant. Use the available tools to complete the task.
+
+  Today's date is {{current_weekday}}, {{current_date}} and the current time is {{current_time}}.
+  {{meeting_constraints}}
 
   Available tools:
   {{tools_description}}
@@ -14,8 +20,7 @@ task_behavior_template: |-
   - Keep outputs concise and focus on task completion.
 
 task_instance_template: |-
-  Task: {{task}}
-  Context: {{context}}
+  Query: {{query}}
 
 task_output_template: |-
   Use tools to complete the task. When finished, call the done tool with a brief summary and confidence.

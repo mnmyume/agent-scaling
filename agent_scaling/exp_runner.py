@@ -15,7 +15,7 @@ from agent_scaling.logger import logger
 from agent_scaling.metrics import (
     aggregate_paper_metrics,
     compute_instance_paper_metrics,
-    load_baseline_metrics,
+    resolve_baseline_metrics,
 )
 from agent_scaling.utils import write_json, write_yaml
 
@@ -100,9 +100,27 @@ class ExperimentRunner:
 
         all_metrics = self.dataset.get_metrics(metrics)
         if self.config.metrics.enable:
-            baseline = load_baseline_metrics(self.config.metrics.baseline_run_dir)
-            if baseline is not None:
-                baseline["_run_dir"] = self.config.metrics.baseline_run_dir
+            baseline_candidates = self.config.get_baseline_candidate_models()
+            baseline = resolve_baseline_metrics(
+                self.config.metrics,
+                dataset_id=self.dataset.dataset_id,
+                default_runs_root=self.config.metrics.domain_complexity_runs_root,
+                allowed_models=baseline_candidates,
+                current_max_instances=self.config.max_instances,
+            )
+            if baseline is None and not self.config.agent.name.startswith("single-agent"):
+                logger.warning(
+                    "No single-agent baseline found for dataset "
+                    f"`{self.dataset.dataset_id}` under candidate models "
+                    f"{baseline_candidates} with max_instances="
+                    f"{self.config.max_instances}. Baseline-dependent paper metrics "
+                    "(coordination/error amplification) will be null."
+                )
+            elif baseline is not None:
+                logger.info(
+                    "Using baseline run for paper metrics: "
+                    f"{baseline.get('_run_dir')} ({baseline.get('_source')})"
+                )
             paper_metrics = aggregate_paper_metrics(
                 [
                     m.get("_paper_metrics", {})
@@ -251,9 +269,27 @@ class ExperimentRunner:
 
         all_metrics = self.dataset.get_metrics(metrics)
         if self.config.metrics.enable:
-            baseline = load_baseline_metrics(self.config.metrics.baseline_run_dir)
-            if baseline is not None:
-                baseline["_run_dir"] = self.config.metrics.baseline_run_dir
+            baseline_candidates = self.config.get_baseline_candidate_models()
+            baseline = resolve_baseline_metrics(
+                self.config.metrics,
+                dataset_id=self.dataset.dataset_id,
+                default_runs_root=self.config.metrics.domain_complexity_runs_root,
+                allowed_models=baseline_candidates,
+                current_max_instances=self.config.max_instances,
+            )
+            if baseline is None and not self.config.agent.name.startswith("single-agent"):
+                logger.warning(
+                    "No single-agent baseline found for dataset "
+                    f"`{self.dataset.dataset_id}` under candidate models "
+                    f"{baseline_candidates} with max_instances="
+                    f"{self.config.max_instances}. Baseline-dependent paper metrics "
+                    "(coordination/error amplification) will be null."
+                )
+            elif baseline is not None:
+                logger.info(
+                    "Using baseline run for paper metrics: "
+                    f"{baseline.get('_run_dir')} ({baseline.get('_source')})"
+                )
             paper_metrics = aggregate_paper_metrics(
                 [
                     m.get("_paper_metrics", {})

@@ -13,6 +13,7 @@ _ENV_IMPORTS: Dict[str, str] = {
     "plancraft": "agent_scaling.env.plancraft",
     "web-search": "agent_scaling.env.web_search",
     "browsecomp-plus": "agent_scaling.env.browsecomp",
+    "finance-agent": "agent_scaling.env.finance_agent",
     "workbench": "agent_scaling.env.workbench",
 }
 

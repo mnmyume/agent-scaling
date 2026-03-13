@@ -4,19 +4,21 @@ defaults:
   - dataset: plancraft-test
 
 llm:
-  model: gemini/gemini-2.5-flash
+  model: openrouter/qwen/qwen3-30b-a3b-instruct-2507
   params:
     temperature: 0.0
+
+llm_tag: ${make_llm_tag:${agent},${llm}}
 
 log_langfuse: false
 use_disk_cache: true
 num_workers: 1
-max_instances: 100
+max_instances: 1
 
-run_name: sas_plancraft_${llm.model}_${now:%Y-%m-%d}_${now:%H-%M-%S}
+run_name: sas_plancraft_${llm_tag}_${now:%Y-%m-%d}_${now:%H-%M-%S}
 
 hydra:
   verbose: false
   run:
-    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm.model}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm_tag}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 hydra/job_logging: disabled

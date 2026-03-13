@@ -213,3 +213,26 @@ class RunConfig(BaseModel):
                 ]
 
         return effective
+
+    def get_baseline_candidate_models(self) -> list[str]:
+        """Models eligible for SAS baseline auto-discovery.
+
+        For heterogeneous multi-agent runs, we prioritize subagent models.
+        If no subagent override exists, fall back to the run base model.
+        """
+        candidates: set[str] = set()
+        cfg = self.agent.agent_specific_config
+        if cfg is not None:
+            if cfg.subagent_llms is not None and len(cfg.subagent_llms) > 0:
+                for override in cfg.subagent_llms:
+                    merged = override.merge(self.llm)
+                    if merged.model:
+                        candidates.add(str(merged.model))
+            elif cfg.subagent_llm is not None:
+                merged = cfg.subagent_llm.merge(self.llm)
+                if merged.model:
+                    candidates.add(str(merged.model))
+
+        if not candidates and self.llm.model:
+            candidates.add(str(self.llm.model))
+        return sorted(candidates)

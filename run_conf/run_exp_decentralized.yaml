@@ -8,6 +8,8 @@ llm:
   params:
     temperature: 0.0
 
+llm_tag: ${make_llm_tag:${agent},${llm}}
+
 # Decentralized architecture settings
 agent:
   n_base_agents: 3
@@ -31,10 +33,10 @@ use_disk_cache: true
 num_workers: 1
 max_instances: 100
 
-run_name: decentralized_plancraft_${llm.model}_${now:%Y-%m-%d}_${now:%H-%M-%S}
+run_name: decentralized_plancraft_${llm_tag}_${now:%Y-%m-%d}_${now:%H-%M-%S}
 
 hydra:
   verbose: false
   run:
-    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm.model}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm_tag}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 hydra/job_logging: disabled

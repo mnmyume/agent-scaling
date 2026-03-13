@@ -1,3 +1,4 @@
+from time import perf_counter
 from typing import Any, Dict, List, Mapping, Optional, cast
 
 import langfuse
@@ -11,6 +12,51 @@ from litellm.types.utils import ModelResponse
 
 class ChatLiteLLMLC(ChatLiteLLM):
     log_langfuse: bool = False
+
+    @staticmethod
+    def _safe_float(value: Any) -> Optional[float]:
+        if value is None:
+            return None
+        try:
+            return float(value)
+        except Exception:
+            return None
+
+    @classmethod
+    def _attach_response_latency_ms(cls, response: Any, latency_ms: float) -> None:
+        if latency_ms <= 0:
+            return
+
+        # Keep provider-populated timings if present; only fill missing/zero values.
+        if isinstance(response, dict):
+            current = cls._safe_float(response.get("_response_ms"))
+            if current is None or current <= 0:
+                response["_response_ms"] = latency_ms
+            hidden = response.get("_hidden_params")
+            if isinstance(hidden, dict):
+                hidden_current = cls._safe_float(hidden.get("_response_ms"))
+                if hidden_current is None or hidden_current <= 0:
+                    hidden["_response_ms"] = latency_ms
+                hidden_ms = cls._safe_float(hidden.get("response_ms"))
+                if hidden_ms is None or hidden_ms <= 0:
+                    hidden["response_ms"] = latency_ms
+            return
+
+        current = cls._safe_float(getattr(response, "_response_ms", None))
+        if current is None or current <= 0:
+            try:
+                setattr(response, "_response_ms", latency_ms)
+            except Exception:
+                pass
+
+        hidden = getattr(response, "_hidden_params", None)
+        if isinstance(hidden, dict):
+            hidden_current = cls._safe_float(hidden.get("_response_ms"))
+            if hidden_current is None or hidden_current <= 0:
+                hidden["_response_ms"] = latency_ms
+            hidden_ms = cls._safe_float(hidden.get("response_ms"))
+            if hidden_ms is None or hidden_ms <= 0:
+                hidden["response_ms"] = latency_ms
 
     def _create_chat_result(self, response: Mapping[str, Any]) -> ChatResult:
         res: ChatResult = super()._create_chat_result(response)
@@ -73,9 +119,12 @@ class ChatLiteLLMLC(ChatLiteLLM):
         message_dicts, params = self._create_message_dicts(messages, stop)
         params = {**params, **kwargs}
 
+        start = perf_counter()
         response = self.completion_with_retry(
             messages=message_dicts, run_manager=run_manager, **params
         )
+        elapsed_ms = (perf_counter() - start) * 1000.0
+        self._attach_response_latency_ms(response, elapsed_ms)
 
         if log_langfuse:
             self._log_langfuse(message_dicts, params, response)
