@@ -93,6 +93,32 @@ class FinanceAgentDataset(Dataset):
 
     def _split_rubric(self, rubric: str) -> Tuple[List[str], List[str]]:
         text = rubric.replace("\r\n", "\n").replace("\r", "\n")
+
+        # Newer Finance-Agent public.csv stores rubric as JSON list:
+        # [{"operator": "correctness"|"contradiction", "criteria": "..."}]
+        stripped = text.strip()
+        if stripped.startswith("["):
+            try:
+                parsed = json.loads(stripped)
+            except Exception:
+                parsed = None
+            if isinstance(parsed, list):
+                correctness_json: List[str] = []
+                contradiction_json: List[str] = []
+                for item in parsed:
+                    if not isinstance(item, dict):
+                        continue
+                    criterion = str(item.get("criteria", "")).strip()
+                    if not criterion:
+                        continue
+                    operator = str(item.get("operator", "")).strip().lower()
+                    if operator == "contradiction":
+                        contradiction_json.append(criterion)
+                    else:
+                        correctness_json.append(criterion)
+                if correctness_json or contradiction_json:
+                    return correctness_json, contradiction_json
+
         m_corr = re.search(r"(?i)\\bcorrectness\\s*:", text)
         m_contra = re.search(r"(?i)\\bcontradiction\\s*:", text)
         corr_block = ""

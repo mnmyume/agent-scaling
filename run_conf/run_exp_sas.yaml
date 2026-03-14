@@ -4,7 +4,7 @@ defaults:
   - dataset: finance-agent
 
 llm:
-  model: openrouter/qwen/qwen3-30b-a3b-instruct-2507
+  model: openrouter/qwen/qwen3-235b-a22b-2507
   params:
     temperature: 0.0
 

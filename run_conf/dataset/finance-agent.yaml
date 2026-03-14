@@ -3,7 +3,7 @@ from_langfuse: false
 local_path: datasets/finance-agent-public.csv
 templates_local_path: prompts/dataset-shared/finance-agent.yaml
 eval_llm:
-  model: gemini/gemini-2.5-flash
+  model: openrouter/qwen/qwen3-235b-a22b-2507
   params:
     temperature: 0.0
 eval_prompts:
