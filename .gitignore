@@ -50,3 +50,5 @@ tests/
 *.md
 !README.md
 .nfs*
+
+.claude/
