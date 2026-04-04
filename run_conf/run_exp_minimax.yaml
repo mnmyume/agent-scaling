@@ -1,0 +1,23 @@
+defaults:
+  - _self_
+  - agent: single-agent
+  - dataset: plancraft-test
+  - llm: minimax-m2-7
+
+log_langfuse: false
+use_disk_cache: true
+num_workers: 1
+debug: false
+max_instances: 100
+
+token_budget:
+  enabled: true
+  total_tokens_per_instance: 4800
+
+run_name: ${agent.name}_${llm.model}_${now:%Y-%m-%d}_${now:%H-%M-%S}
+
+hydra:
+  verbose: false
+  run:
+    dir: exp_outputs/${dataset.dataset_id}/${agent.name}/${llm.model}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+hydra/job_logging: disabled

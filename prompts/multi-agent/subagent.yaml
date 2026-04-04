@@ -41,8 +41,51 @@ start_with_orchestrator_guidance:
       Begin!
     role: user
 
+start_independent_work:
+  - content: |-
+      Work on the task independently from start to finish.
+
+      Your local objective:
+      {{agent_objective}}
+
+      Your local focus:
+      {{agent_strategy}}
+
+      Do not assume any peer or orchestrator guidance.
+      Begin!
+    role: user
+
+start_with_peer_context:
+  - content: |-
+      You are entering a peer communication round.
+
+      Your local objective:
+      {{agent_objective}}
+
+      Your local focus:
+      {{agent_strategy}}
+
+      Peer findings to consider:
+      {{peer_context}}
+
+      Use tools to verify, challenge, refine, or extend the peer findings before you summarize your own position.
+    role: user
+
 summarize_findings:
   - content: |-
       Based on your exploration so far, write a summary of your findings to be the most helpful for your multi-agent team.
       This summary should include the actions you took, the results you observed, and any conclusions you've drawn.
+    role: user
+
+final_answer:
+  - content: |-
+      You are preparing your final answer for the team.
+      Do not call tools.
+
+      Return ONLY valid JSON in this format:
+      {
+        "final_answer": "your best concise answer",
+        "confidence": 0,
+        "rationale": "one short explanation"
+      }
     role: user

@@ -8,6 +8,7 @@ from agent_scaling.agents.base import AgentSystemWithTools
 from agent_scaling.config.llm import LLMParams
 from agent_scaling.datasets import DatasetInstance, DatasetInstanceOutput
 from agent_scaling.utils import write_yaml
+from agent_scaling.utils.token_budget import TokenBudgetManager
 
 from .registry import register_agent
 
@@ -26,6 +27,7 @@ class DirectPrompt(AgentSystemWithTools):
         instance_dir: Optional[str] = None,
         llm_params: Optional[LLMParams] = None,
         instance_idx: Optional[int] = None,
+        budget_manager: Optional[TokenBudgetManager] = None,
     ) -> DatasetInstanceOutput:
         llm_params_dict = llm_params.model_dump() if llm_params else {}
         env, _ = self.init_environment(instance)

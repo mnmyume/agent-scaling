@@ -19,14 +19,50 @@ completion_cost(response_obj)
 """
 
 
+def _extract_litellm_cost(litellm_message: ModelResponse) -> Optional[float]:
+    usage = getattr(litellm_message, "usage", None)
+    usage_cost = getattr(usage, "cost", None)
+    if usage_cost is not None:
+        return float(usage_cost)
+
+    hidden_params = getattr(litellm_message, "_hidden_params", None) or {}
+    response_cost = hidden_params.get("response_cost")
+    if response_cost is not None:
+        return float(response_cost)
+
+    try:
+        return completion_cost(litellm_message)
+    except Exception:
+        return None
+
+
 class MessageTurn(BaseModel):
     round_num: int
     timestamp: str
 
 
 class MessageTurnExternal(MessageTurn):
-    role: Literal["subagent", "lead_agent"]
+    role: Literal["subagent", "lead_agent", "peer"]
     message: str
+    sender_id: Optional[str] = None
+    recipient_id: Optional[str] = None
+    channel: Literal["orchestrator", "peer", "aggregation"] = "orchestrator"
+
+
+class CommunicationEvent(BaseModel):
+    round_num: int
+    timestamp: str
+    sender_id: str
+    recipient_id: str
+    channel: Literal["orchestrator", "peer", "aggregation"]
+    message: str
+
+
+class FinalAnswerCandidate(BaseModel):
+    agent_id: str
+    answer: str
+    confidence: int = 0
+    rationale: str = ""
 
 
 class MessageTurnInternal(MessageTurn):
@@ -37,7 +73,7 @@ class MessageTurnInternal(MessageTurn):
 
     @property
     def cost(self) -> Optional[float]:
-        return completion_cost(self.litellm_message) if self.litellm_message else None
+        return _extract_litellm_cost(self.litellm_message) if self.litellm_message else None
 
 
 class LLMResponseMessage(BaseModel):
@@ -47,7 +83,7 @@ class LLMResponseMessage(BaseModel):
     @computed_field
     @cached_property
     def cost(self) -> Optional[float]:
-        return completion_cost(self.litellm_message) if self.litellm_message else None
+        return _extract_litellm_cost(self.litellm_message) if self.litellm_message else None
 
 
 class AgentConversationHistory(BaseModel):
@@ -153,7 +189,12 @@ class SubAgentConversationHistory(BaseModel):
         )
 
     def add_external_message(
-        self, role: Literal["subagent", "lead_agent"], message: str
+        self,
+        role: Literal["subagent", "lead_agent", "peer"],
+        message: str,
+        sender_id: Optional[str] = None,
+        recipient_id: Optional[str] = None,
+        channel: Literal["orchestrator", "peer", "aggregation"] = "orchestrator",
     ):
         self.external_comms.append(
             MessageTurnExternal(
@@ -161,8 +202,35 @@ class SubAgentConversationHistory(BaseModel):
                 role=role,
                 message=message,
                 timestamp=datetime.now().isoformat(),
+                sender_id=sender_id,
+                recipient_id=recipient_id,
+                channel=channel,
             )
         )
+
+    def to_communication_events(self) -> List[CommunicationEvent]:
+        events: List[CommunicationEvent] = []
+        for msg in self.external_comms:
+            if msg.role == "lead_agent":
+                sender_id = msg.sender_id or "lead_agent"
+                recipient_id = msg.recipient_id or self.agent_id
+            elif msg.role == "subagent":
+                sender_id = msg.sender_id or self.agent_id
+                recipient_id = msg.recipient_id or "lead_agent"
+            else:
+                sender_id = msg.sender_id or "peer"
+                recipient_id = msg.recipient_id or self.agent_id
+            events.append(
+                CommunicationEvent(
+                    round_num=msg.round_num,
+                    timestamp=msg.timestamp,
+                    sender_id=sender_id,
+                    recipient_id=recipient_id,
+                    channel=msg.channel,
+                    message=msg.message,
+                )
+            )
+        return events
 
 
 class SubAgentRoundResult(BaseModel):
@@ -177,13 +245,19 @@ class SubAgentRoundResult(BaseModel):
 
 
 class OrchestrationResult(BaseModel):
+    architecture: str = "multi-agent-centralized"
     plan: OrchestrationPlan
     subagent_conversations: Dict[str, SubAgentConversationHistory]
     subagent_env_status: Dict[str, DatasetEnvStatus]
     subagent_findings: Dict[str, List[str]]
     total_findings: int
-    lead_agent_conversation: AgentConversationHistory
+    lead_agent_conversation: Optional[AgentConversationHistory] = None
+    communication_events: List[CommunicationEvent] = Field(default_factory=list)
+    final_candidates: List[FinalAnswerCandidate] = Field(default_factory=list)
+    total_rounds: int = 0
+    completion_reason: str = "completed"
     synthesized_answer: Optional[str] = None
+    budget_allocation: Optional[Dict[str, Any]] = None
 
     @computed_field
     @cached_property

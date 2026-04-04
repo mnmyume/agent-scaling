@@ -49,6 +49,7 @@ tests/
 # Misc
 *.md
 !README.md
+!docs/mas_architectures.md
 .nfs*
 
 .claude/

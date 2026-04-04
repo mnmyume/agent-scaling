@@ -40,11 +40,17 @@ class TrajectoryStep(BaseModel):
 class DatasetInstanceOutput(BaseModel, Generic[T]):
     data_instance: T
     agent_output: str | Any
+    runtime_metrics: Optional[Dict[str, Any]] = None
+    runtime_metrics_path: Optional[str] = None
+    runtime_events_path: Optional[str] = None
 
 
 class DatasetInstanceOutputWithTrajectory(DatasetInstanceOutput[T], Generic[T]):
     trajectory: List[TrajectoryStep] = Field(default_factory=list)
     final_env_output: DatasetEnvStatus | None = None
+    budget_used: int = 0
+    budget_remaining: int = 0
+    budget_exceeded: bool = False
 
 
 class DatasetSharedPrompts(BaseModel):
@@ -207,6 +213,20 @@ class Dataset(BaseModel, ABC):
     ) -> Dict[str, Union[int, float]]:
         """Get the evaluation metrics for the instance."""
         pass
+
+    def get_instance_success(
+        self, instance_metrics: Dict[str, Any], instance_output: DatasetInstanceOutput
+    ) -> Optional[bool]:
+        """Infer a final task-success label from dataset-specific evaluation metrics."""
+        if "success" in instance_metrics:
+            return bool(instance_metrics["success"])
+        if "is_correct" in instance_metrics:
+            return bool(instance_metrics["is_correct"])
+        if "correct" in instance_metrics:
+            return bool(instance_metrics["correct"])
+        if "grade" in instance_metrics:
+            return instance_metrics["grade"] == "CORRECT"
+        return None
 
     @abstractmethod
     def get_metrics(self, eval_outputs: List[Dict[str, Any] | str]) -> Dict[str, Any]:

@@ -1,7 +1,7 @@
 import threading
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .plan import OrchestrationPlan
 
@@ -9,8 +9,8 @@ from .plan import OrchestrationPlan
 class EnhancedMemory(BaseModel):
     """Enhanced memory system for multi-agent coordination with thread safety"""
 
-    all_findings: List[str] = []
-    agent_findings: Dict[str, List[str]] = {}
+    all_findings: List[str] = Field(default_factory=list)
+    agent_findings: Dict[str, List[str]] = Field(default_factory=dict)
     execution_plan: Optional[OrchestrationPlan] = None
     original_task: str = ""
 

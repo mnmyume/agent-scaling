@@ -1,0 +1,11 @@
+# OpenRouter provider configuration
+# Requires OPENROUTER_API_KEY in .env
+# Model names use the openrouter/ prefix followed by the provider/model path
+# See https://openrouter.ai/models for available models
+#
+# Usage:
+#   python run_scripts/run_experiment.py llm.model=openrouter/anthropic/claude-3.5-sonnet
+
+model: openrouter/anthropic/claude-3.5-sonnet
+params:
+  temperature: 0.0

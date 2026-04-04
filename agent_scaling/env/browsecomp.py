@@ -1,5 +1,3 @@
-from agent_scaling.env.browsecomp_utils.handler import SearchToolHandler
-
 from .base import AgentEnvironmentTools
 from .registry import register_env
 from .tools import cls_tool
@@ -11,12 +9,16 @@ _search_tool_handler = None
 class BrowseCompPlusEnvironment(AgentEnvironmentTools):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.search_handler = None
+
+    def _get_search_handler(self):
         global _search_tool_handler
         if _search_tool_handler is None:
-            _search_tool_handler = (
-                SearchToolHandler()
-            )  # otherwise need to reload everytime
+            from agent_scaling.env.browsecomp_utils.handler import SearchToolHandler
+
+            _search_tool_handler = SearchToolHandler()
         self.search_handler = _search_tool_handler
+        return self.search_handler
 
     @cls_tool
     def search_documents(self, query: str) -> str:
@@ -29,7 +31,7 @@ class BrowseCompPlusEnvironment(AgentEnvironmentTools):
         Returns:
             A summary of search results with relevant information as a JSON string.
         """
-        ret = self.search_handler.execute_tool("search", {"query": query})
+        ret = self._get_search_handler().execute_tool("search", {"query": query})
         return ret
 
     @cls_tool
@@ -43,7 +45,7 @@ class BrowseCompPlusEnvironment(AgentEnvironmentTools):
         Returns:
             The full text content of the specified document.
         """
-        ret = self.search_handler.execute_tool("get_document", {"docid": docid})
+        ret = self._get_search_handler().execute_tool("get_document", {"docid": docid})
         return ret
 
     @cls_tool

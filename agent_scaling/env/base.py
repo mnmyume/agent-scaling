@@ -1,5 +1,6 @@
 import inspect
 import json
+import time
 from typing import Dict, List, Optional
 
 from langchain_core.messages.tool import ToolCall, ToolMessage
@@ -44,6 +45,9 @@ class AgentEnvironment:
         self.dataset_instance = dataset_instance
         self.success = False
         self.num_steps = 0
+        self.metrics_collector = None
+        self._metrics_round: Optional[int] = None
+        self._metrics_iteration: Optional[int] = None
 
     def env_status(self) -> DatasetEnvStatus:
         """
@@ -115,12 +119,52 @@ class AgentEnvironment:
             ret += f"{tool_call}\n"
         return ret
 
+    def attach_metrics_collector(self, metrics_collector: object) -> None:
+        self.metrics_collector = metrics_collector
+
+    def set_metrics_context(
+        self,
+        round_num: Optional[int] = None,
+        iteration: Optional[int] = None,
+    ) -> None:
+        self._metrics_round = round_num
+        self._metrics_iteration = iteration
+
     def execute_tool(self, tool_call: ToolCall) -> ToolMessage:
         """
         Execute a single tool.
         """
-        ret = self.tools[tool_call["name"]].invoke(tool_call)
+        start_time = time.perf_counter()
+        tool_name = tool_call["name"]
+        tool_args = tool_call.get("args", {})
+        try:
+            ret = self.tools[tool_name].invoke(tool_call)
+        except Exception as exc:
+            if self.metrics_collector is not None:
+                self.metrics_collector.log_tool_call(
+                    agent_id=self.agent_id or "single_agent",
+                    tool_name=tool_name,
+                    arguments=tool_args,
+                    success=False,
+                    execution_time_ms=(time.perf_counter() - start_time) * 1000,
+                    round=self._metrics_round,
+                    iteration=self._metrics_iteration,
+                    error_message=str(exc),
+                )
+            raise
+
         self.num_steps += 1
+        if self.metrics_collector is not None:
+            self.metrics_collector.log_tool_call(
+                agent_id=self.agent_id or "single_agent",
+                tool_name=tool_name,
+                arguments=tool_args,
+                success=True,
+                execution_time_ms=(time.perf_counter() - start_time) * 1000,
+                round=self._metrics_round,
+                iteration=self._metrics_iteration,
+                result=ret.content,
+            )
         return ret
 
     def execute_tools(self, tool_calls: List[ToolCall]) -> List[ToolMessage]:

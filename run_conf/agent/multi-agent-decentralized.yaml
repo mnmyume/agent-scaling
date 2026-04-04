@@ -1,11 +1,14 @@
 name: multi-agent-decentralized
 prompts:
+  lead_agent:
+    local_path: prompts/multi-agent/lead_agent.yaml
   subagent:
-    local_path: prompts/multiagent_research/subagent.yaml
+    local_path: prompts/multi-agent/subagent.yaml
 
-# Decentralized multi-agent parameters
-n_base_agents: 3
-min_iterations_per_agent: 3
-max_rounds: 5                    # Maximum debate rounds
-consensus_threshold: 0.7         # 70% agreement needed for consensus
-task_blurb: "peer collaborator" 
+agent_specific_config:
+  n_base_agents: 3
+  min_iterations_per_agent: 3
+  max_iterations_per_agent: 3
+  max_rounds: 3
+  consensus_threshold: 0.67
+  task_blurb: "peer collaborator"

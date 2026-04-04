@@ -44,73 +44,60 @@ LANGFUSE_PUBLIC_KEY="your-public-key"
 
 ## Running Experiments
 
-### Basic Usage
+All commands below work with the original `python run_scripts/run_experiment.py ...` interface after `source .venv/bin/activate`. If you prefer not to activate the virtual environment, prepend `uv run`.
 
-Run an experiment with default configuration:
+### Basic Usage
 
 ```bash
 python run_scripts/run_experiment.py
+python run_scripts/run_experiment.py debug=true max_instances=1
 ```
 
-Run in debug mode (processes fewer instances):
+The framework uses [Hydra](https://hydra.cc/docs/intro/) for configuration management, so any field can be overridden from the CLI:
 
 ```bash
-python run_scripts/run_experiment.py debug=true
-```
-
-### Configuring Experiments
-
-The framework uses [Hydra](https://hydra.cc/docs/intro/) for configuration management. Override parameters via command line:
-
-```bash
-# Run single-agent on PlanCraft dataset
 python run_scripts/run_experiment.py agent=single-agent dataset=plancraft-test
-
-# Run multi-agent centralized system
-python run_scripts/run_experiment.py agent=multi-agent-centralized dataset=plancraft-test
-
-# Run with different LLM
 python run_scripts/run_experiment.py llm.model=gpt-4o-mini
-
-# Run with parallel workers
 python run_scripts/run_experiment.py num_workers=4
-
-# Process more instances
-python run_scripts/run_experiment.py max_instances=10
+python run_scripts/run_experiment.py token_budget.total_tokens_per_instance=4800
 ```
 
-### Available Configurations
+### Implemented Agent Configs
 
-#### Agent Types
+| Architecture | Config Name | Description |
+|-------------|-------------|-------------|
+| Single-Agent | `single-agent` | Single LLM agent with tool use |
+| Centralized MAS | `multi-agent-centralized` | Lead-agent orchestration with worker agents |
+| Independent MAS | `multi-agent-independent` | Parallel workers with no live coordination |
+| Decentralized MAS | `multi-agent-decentralized` | Peer-to-peer coordination without a lead agent |
+| Hybrid MAS | `multi-agent-hybrid` | Lead-agent orchestration plus bounded peer exchange |
 
-| Agent | Config Name | Description |
-|-------|-------------|-------------|
-| Single Agent | `single-agent` | Single LLM agent with tool use |
-| Multi-Agent Centralized | `multi-agent-centralized` | Orchestrated multi-agent system with lead agent |
-| Multi-Agent Decentralized | `multi-agent-decentralized` | Peer-to-peer multi-agent coordination |
-| Multi-Agent Hybrid | `multi-agent-hybrid` | Hybrid coordination approach |
-| Multi-Agent Independent | `multi-agent-independent` | Independent parallel agents |
+### Implemented Dataset Selectors
 
-#### Datasets
+| Dataset | Config Name | Notes |
+|---------|-------------|-------|
+| PlanCraft test subset | `plancraft-test` | Objective environment-grounded evaluation |
+| BrowseComp+ sampled subset | `browsecomp-plus` | LLM-graded via the reusable BrowseComp grader |
 
-| Dataset | Config Name | Description |
-|---------|-------------|-------------|
-| BrowseComp+ | `browsecomp-plus` | Web browsing comprehension tasks |
-| PlanCraft | `plancraft` | Minecraft crafting planning tasks |
-| Workbench | `workbench` | Tool use benchmark tasks |
-| FinanceAgent | `finance-agent` | Financial reasoning tasks |
+Finance-Agent and Workbench are intentionally deferred in this pass and are not yet wired into `run_conf/`.
 
 #### Supported LLMs
 
-| Provider | Models |
-|----------|--------|
-| OpenAI | GPT-5, GPT-5-mini, GPT-5-nano |
-| Google | Gemini-2.5 Pro, Gemini-2.5 Flash, Gemini-2.0 Flash |
-| Anthropic | Claude 4.5 Sonnet, Claude 4.0 Sonnet, Claude 3.7 Sonnet |
+| Provider | Models | Prefix |
+|----------|--------|--------|
+| OpenAI | GPT-5, GPT-5-mini, GPT-5-nano | (none) |
+| Google | Gemini-2.5 Pro, Gemini-2.5 Flash, Gemini-2.0 Flash | `gemini/` |
+| Anthropic | Claude 4.5 Sonnet, Claude 4.0 Sonnet, Claude 3.7 Sonnet | `anthropic/` |
+| OpenRouter | Any model available on OpenRouter | `openrouter/` |
+| Minimax | MiniMax-Text-01 (Anthropic-compatible API) | `minimax/` |
+
+**OpenRouter**: Set `OPENROUTER_API_KEY` in `.env`. Use models like `openrouter/anthropic/claude-3.5-sonnet`.
+
+**Minimax**: Set `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL=https://api.minimax.io/anthropic` in `.env`. Use models like `minimax/MiniMax-Text-01`.
 
 ## Example Experiments
 
-### Single-Agent on PlanCraft
+### SAS
 
 ```bash
 python run_scripts/run_experiment.py \
@@ -120,7 +107,7 @@ python run_scripts/run_experiment.py \
     max_instances=5
 ```
 
-### Multi-Agent Centralized on PlanCraft
+### Centralized
 
 ```bash
 python run_scripts/run_experiment.py \
@@ -130,37 +117,64 @@ python run_scripts/run_experiment.py \
     max_instances=5
 ```
 
-### Multi-Agent Centralized on BrowseComp+
+### Independent
 
 ```bash
 python run_scripts/run_experiment.py \
-    agent=multi-agent-centralized \
+    agent=multi-agent-independent \
+    dataset=plancraft-test \
+    llm.model=gemini/gemini-2.0-flash \
+    max_instances=5
+```
+
+### Decentralized
+
+```bash
+python run_scripts/run_experiment.py \
+    agent=multi-agent-decentralized \
     dataset=browsecomp-plus \
     llm.model=gpt-4o-mini \
     max_instances=5
 ```
 
-### Scaling Number of Agents
-
-The multi-agent centralized system supports configuring the number of agents:
+### Hybrid
 
 ```bash
-# Run with 5 agents
 python run_scripts/run_experiment.py \
-    agent=multi-agent-centralized \
-    agent.n_base_agents=5 \
-    dataset=plancraft-test
-
-# Run with 10 agents
-python run_scripts/run_experiment.py \
-    agent=multi-agent-centralized \
-    agent.n_base_agents=10 \
-    dataset=plancraft-test
+    agent=multi-agent-hybrid \
+    dataset=browsecomp-plus \
+    llm.model=gpt-4o-mini \
+    max_instances=5
 ```
+
+### Tiny Smoke Runs
+
+```bash
+python run_scripts/run_experiment.py agent=single-agent dataset=plancraft-test debug=true max_instances=1
+python run_scripts/run_experiment.py agent=multi-agent-centralized dataset=plancraft-test debug=true max_instances=1
+python run_scripts/run_experiment.py agent=multi-agent-independent dataset=plancraft-test debug=true max_instances=1
+python run_scripts/run_experiment.py agent=multi-agent-decentralized dataset=browsecomp-plus debug=true max_instances=1
+python run_scripts/run_experiment.py agent=multi-agent-hybrid dataset=browsecomp-plus debug=true max_instances=1
+```
+
+### Metrics Aggregation
+
+Aggregate completed experiment folders into paper-style metrics:
+
+```bash
+uv run python run_scripts/aggregate_metrics.py exp_outputs/plancraft-test
+uv run python run_scripts/aggregate_metrics.py exp_outputs/browsecomp_plus_sampled_100
+```
+
+Paired metrics are only emitted when a compatible `single-agent` baseline exists for the same dataset, model, token budget, and completed instance subset.
 
 ## Output Structure
 
-Experiment outputs are saved to `exp_outputs/{dataset}/{agent}/{model}/{date}/{time}/`:
+Experiment outputs are saved to `exp_outputs/{dataset_id}/{agent}/{model}/{date}/{time}/`.
+
+The BrowseComp+ selector is `dataset=browsecomp-plus`, and its current dataset id is `browsecomp_plus_sampled_100`, so those runs are written under `exp_outputs/browsecomp_plus_sampled_100/...`.
+
+Example:
 
 ```
 exp_outputs/
@@ -168,29 +182,31 @@ exp_outputs/
     └── multi-agent-centralized/
         └── gemini/
             └── gemini-2.0-flash/
-                └── 2025-01-21/
-                    └── 12-30-45/
-                        ├── run_config.yaml        # Experiment configuration
-                        ├── run.log                # Detailed execution logs
-                        ├── dataset_eval_metrics.json  # Aggregated metrics
-                        └── instance_runs/         # Per-instance outputs
-                            ├── 0000/
-                            ├── 0001/
-                            └── ...
+                └── 2026-04-04/
+                    └── 01-09-04/
+                        ├── .hydra/
+                        ├── run_config.yaml
+                        ├── run.log
+                        ├── run_experiment.log
+                        ├── dataset_eval_metrics.json
+                        ├── run_runtime_metrics.json
+                        └── instance_runs/
+                            └── 0000/
+                                ├── instance_save.yaml
+                                ├── runtime_metrics.json
+                                ├── runtime_events.jsonl
+                                └── *_output.yaml
 ```
 
 ### Output Files
 
-- **`run_config.yaml`**: Full configuration used for the experiment
-- **`run.log`**: Detailed logs including prompts, LLM responses, and tool calls
-- **`dataset_eval_metrics.json`**: Aggregated evaluation metrics
-  ```json
-  {
-    "avg_success": 0.85,
-    "avg_num_steps": 7.2,
-    "num_instances": 100
-  }
-  ```
+- `run_config.yaml`: resolved experiment metadata, including token budget and run limits
+- `dataset_eval_metrics.json`: dataset-level evaluation summary
+- `run_runtime_metrics.json`: aggregated runtime metrics across completed instances in the run
+- `instance_runs/<idx>/runtime_metrics.json`: per-instance raw runtime metrics
+- `instance_runs/<idx>/runtime_events.jsonl`: per-instance raw event trace
+- `instance_runs/<idx>/instance_save.yaml`: input, output, and evaluation payload for that instance
+- `instance_runs/<idx>/*_output.yaml`: architecture-specific saved agent output
 
 ## Example Output
 
@@ -242,18 +258,27 @@ use_disk_cache: true                # Cache LLM calls
 num_workers: 1                      # Parallel workers
 debug: true                         # Debug mode
 max_instances: 3                    # Max instances to process
+token_budget:
+  enabled: true
+  total_tokens_per_instance: 4800   # Shared SAS/MAS per-instance budget
 ```
 
 ### Multi-Agent Config (`run_conf/agent/multi-agent-centralized.yaml`)
 
 ```yaml
 name: multi-agent-centralized
-n_base_agents: 3                    # Number of agents
-min_iterations_per_agent: 3         # Min iterations per agent
-max_iterations_per_agent: 10        # Max iterations per agent
-max_rounds: 5                       # Max orchestration rounds
-communication:
-  strategy: orchestrated            # Communication strategy
+prompts:
+  lead_agent:
+    local_path: prompts/multi-agent/lead_agent.yaml
+  subagent:
+    local_path: prompts/multi-agent/subagent.yaml
+
+agent_specific_config:
+  n_base_agents: 3
+  min_iterations_per_agent: 3
+  max_iterations_per_agent: 3
+  max_rounds: 5
+  task_blurb: "task coordinator"
 ```
 
 ## Citation

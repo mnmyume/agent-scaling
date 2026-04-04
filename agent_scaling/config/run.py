@@ -16,17 +16,34 @@ from .llm import LLMConfig
 from .prompts import Prompt
 
 
-class MultiAgentResearchConfig(BaseModel):
+class TokenBudgetConfig(BaseModel):
+    enabled: bool = True
+    total_tokens_per_instance: int = 4800
+
+
+class MultiAgentConfig(BaseModel):
     n_base_agents: int = 3
-    max_orchestrator_turns: int = 2
-    min_searches_per_agent: int = 3
-    max_iterations_per_agent: int = 7
+    min_iterations_per_agent: int = 3
+    max_iterations_per_agent: int = 3
+    max_rounds: int = 5
+    peer_rounds: int = 1
+    peer_fanout: Optional[int] = None
+    peer_max_iterations: int = 1
+    consensus_threshold: float = 0.67
+    task_blurb: Optional[str] = None
+    max_execution_time: int = 300
+    worker_timeout: int = 120
+    max_findings: int = 100
+    communication: Optional[Dict[str, Any]] = None
+
+
+MultiAgentResearchConfig = MultiAgentConfig
 
 
 class AgentConfig(BaseModel):
     name: str
     prompts: Dict[str, Prompt] = Field(default_factory=dict)
-    agent_specific_config: Optional[MultiAgentResearchConfig] = None
+    agent_specific_config: Optional[MultiAgentConfig] = None
 
     @model_validator(mode="after")
     def check_prompts(self) -> Self:
@@ -38,6 +55,24 @@ class AgentConfig(BaseModel):
     @classmethod
     def add_prompt_names(cls, data: Any) -> Dict[str, Any]:
         data = dict(data)
+        agent_specific_config = dict(data.get("agent_specific_config") or {})
+
+        if "debate_rounds" in data and "max_rounds" not in agent_specific_config:
+            agent_specific_config["max_rounds"] = data.pop("debate_rounds")
+        if "peer_exchange_rounds" in data and "peer_rounds" not in agent_specific_config:
+            agent_specific_config["peer_rounds"] = data.pop("peer_exchange_rounds")
+
+        enable_peer_communication = data.pop("enable_peer_communication", None)
+        if enable_peer_communication is False:
+            agent_specific_config["peer_rounds"] = 0
+
+        for field_name in MultiAgentConfig.model_fields:
+            if field_name in data:
+                agent_specific_config[field_name] = data.pop(field_name)
+
+        if agent_specific_config:
+            data["agent_specific_config"] = agent_specific_config
+
         prompts = dict(data.get("prompts", {}))
         for k, prompt in prompts.items():
             prompt = dict(prompt)
@@ -57,6 +92,11 @@ class AgentConfig(BaseModel):
         return {
             "name": self.name,
             "prompts": prompts,
+            "agent_specific_config": (
+                self.agent_specific_config.model_dump(exclude_none=True)
+                if self.agent_specific_config is not None
+                else None
+            ),
         }
 
 
@@ -71,6 +111,7 @@ class RunConfig(BaseModel):
     debug: bool = False
     max_instances: Optional[int] = None
     num_workers: int = 1
+    token_budget: TokenBudgetConfig = Field(default_factory=TokenBudgetConfig)
 
     @property
     def run_parallel(self) -> bool:
@@ -108,6 +149,11 @@ class RunConfig(BaseModel):
             "agent": self.agent.get_run_metadata(),
             "llm": self.llm.model_dump(exclude_none=True),
             "dataset": self.dataset.model_dump(exclude_none=True),
+            "token_budget": self.token_budget.model_dump(),
+            "log_langfuse": self.log_langfuse,
+            "use_disk_cache": self.use_disk_cache,
+            "debug": self.debug,
+            "max_instances": self.max_instances,
         }
         if self.save_dir is not None:
             ret["save_dir"] = self.save_dir

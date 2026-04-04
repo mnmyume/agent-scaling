@@ -5,6 +5,9 @@ from .direct_prompt import *
 
 # Import new multi-agent variants
 from .multiagent_centralized import *
+from .multiagent_decentralized import *
+from .multiagent_hybrid import *
+from .multiagent_independent import *
 from .registry import (
     AgentSystem,
     get_agent,

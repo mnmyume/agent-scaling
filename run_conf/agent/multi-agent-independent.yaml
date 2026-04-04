@@ -1,4 +1,4 @@
-name: multi-agent-centralized
+name: multi-agent-independent
 prompts:
   lead_agent:
     local_path: prompts/multi-agent/lead_agent.yaml
@@ -9,7 +9,5 @@ agent_specific_config:
   n_base_agents: 3
   min_iterations_per_agent: 3
   max_iterations_per_agent: 3
-  max_rounds: 5
-  task_blurb: "task coordinator"
-  max_execution_time: 300
-  worker_timeout: 180
+  max_rounds: 1
+  task_blurb: "independent solver"

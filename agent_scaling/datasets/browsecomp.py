@@ -1,13 +1,12 @@
 import base64
 import hashlib
-import re
 from typing import Any, Dict, List, Optional, Union
 
-from langchain_core.messages import BaseMessage
 from pydantic import Field
 
 from agent_scaling.datasets.base import Dataset, DatasetInstance, DatasetInstanceOutput
 from agent_scaling.datasets.registry import register_dataset, register_dataset_instance
+from agent_scaling.llm.llm_grader import build_browsecomp_grader
 
 
 def derive_key(password: str, length: int) -> bytes:
@@ -87,36 +86,14 @@ class BrowseCompDataset(Dataset):
         assert self.eval_prompts is not None, "eval_llm must be set for evaluation"
         assert self.eval_llm is not None, "eval_llm must be set for evaluation"
         instance = instance_output.data_instance
-        prompt_message = self.eval_prompts["grader"].compile(
-            question=instance.problem,
-            response=instance_output.agent_output,
-            correct_answer=instance.expected_output,
+        grader = build_browsecomp_grader(self.eval_llm, self.eval_prompts["grader"])
+        return grader.grade(
+            prompt_kwargs={
+                "question": instance.problem,
+                "response": instance_output.agent_output,
+                "correct_answer": instance.expected_output,
+            }
         )
-
-        response: BaseMessage = self.eval_llm.invoke(prompt_message)
-        grader_text = response.text().strip()
-        is_correct = "correct: yes" in grader_text
-        extracted_answer = "Not found"
-        if "extracted_final_answer:" in grader_text:
-            answer_line = (
-                grader_text.split("extracted_final_answer:")[1].split("\n")[0].strip()
-            )
-            if answer_line and answer_line != "none":
-                extracted_answer = answer_line
-
-        confidence = 100
-        if "confidence:" in grader_text:
-            conf_match = re.search(
-                r"(\d+)", grader_text.split("confidence:")[1].split("\n")[0]
-            )
-            if conf_match:
-                confidence = float(conf_match.group(1))
-
-        return {
-            "is_correct": is_correct,
-            "extracted_answer": extracted_answer,
-            "confidence": confidence,
-        }
 
     def get_metrics(self, eval_outputs: List[Dict[str, Any]]) -> Dict[str, Any]:
         return {

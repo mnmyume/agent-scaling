@@ -1,0 +1,11 @@
+# MiniMax M2.7 via the Anthropic-compatible MiniMax API.
+# Requires ANTHROPIC_API_KEY in `.env`.
+# If ANTHROPIC_BASE_URL is unset or points elsewhere, the code will route
+# `minimax/` models to `https://api.minimax.io/anthropic`.
+#
+# Usage:
+#   python run_scripts/run_experiment.py llm=minimax-m2-7
+
+model: minimax/MiniMax-M2.7
+params:
+  temperature: 0.0

@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from langchain_core.messages import AIMessage
 from langchain_core.messages.utils import convert_to_openai_messages
@@ -24,6 +24,7 @@ def run_with_validation(
     val_func: Callable[[str], Any],
     num_retries: int = 3,
     val_func_kwargs: Dict[str, Any] = {},
+    invoke_fn: Optional[Callable[[List[Dict[str, Any]], Dict[str, Any]], AIMessage]] = None,
     **kwargs,
 ) -> Tuple[List[AIMessage], Any]:
     """
@@ -42,9 +43,14 @@ def run_with_validation(
         - Parsed result from validation function
     """
     error_msg = ""
+    outputs: List[AIMessage] = []
     for i in range(num_retries):
-        output = llm.invoke(messages, **kwargs)
-        outputs = [output]
+        output = (
+            invoke_fn(messages, kwargs)
+            if invoke_fn is not None
+            else llm.invoke(messages, **kwargs)
+        )
+        outputs.append(output)
         try:
             res = val_func(output.text(), **val_func_kwargs)
             return outputs, res

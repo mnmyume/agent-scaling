@@ -1,6 +1,8 @@
 import asyncio
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
+
+from langchain_core.messages import AIMessage
 
 from agent_scaling.agents.base import BaseAgentWithTools
 from agent_scaling.agents.output_validation import run_with_validation, validate_json
@@ -8,7 +10,13 @@ from agent_scaling.config.prompts import NamedPrompt
 from agent_scaling.datasets import DatasetInstance
 from agent_scaling.logger import logger
 from agent_scaling.utils import join_with_leading_dash
+from agent_scaling.utils.token_budget import (
+    TokenBudgetExceeded,
+    TokenBudgetManager,
+    extract_token_usage,
+)
 
+from .budgeting import MASBudgetAllocator
 from .conversation import (
     AgentConversationHistory,
     OrchestrationResult,
@@ -30,15 +38,55 @@ class LeadAgent(BaseAgentWithTools):
         memory: EnhancedMemory,
         min_iterations_per_agent: int = 3,
         num_base_agents: int = 3,
+        max_rounds: int = 5,
+        max_execution_time: int = 300,
+        worker_timeout: int = 120,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.memory = memory
         self.min_iterations_per_agent = min_iterations_per_agent
         self.num_base_agents = num_base_agents
+        self.max_rounds = max_rounds
+        self.max_execution_time = max_execution_time
+        self.worker_timeout = worker_timeout
         self.subagents: Dict[str, WorkerSubagent] = {}
         self.subagent_kwargs = kwargs
         self.conv_history = AgentConversationHistory(agent_id="lead_agent")
+        self.budget_manager: Optional[TokenBudgetManager] = None
+        self.budget_allocator: Optional[MASBudgetAllocator] = None
+        self.llm_params_dict: Dict[str, Any] = {}
+
+    def _prepare_llm_kwargs(
+        self,
+        messages: Any,
+        bucket: str,
+        extra_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        kwargs = {**self.llm_params_dict, **(extra_kwargs or {})}
+        if self.budget_allocator is not None:
+            return self.budget_allocator.prepare_call(bucket, messages, kwargs)
+        return kwargs
+
+    def _consume_response(self, bucket: str, response) -> None:
+        if self.budget_allocator is not None:
+            self.budget_allocator.consume_response(bucket, response)
+            return
+        if self.budget_manager is not None:
+            inp_tok, out_tok = extract_token_usage(response)
+            self.budget_manager.consume(inp_tok, out_tok)
+
+    def _invoke_llm(self, messages, bucket: str = "coordination", **kwargs):
+        """Invoke LLM and track token usage against the shared budget."""
+        response = self._invoke_with_metrics(
+            self.llm,
+            messages,
+            agent_id="lead_agent",
+            llm_kwargs=self._prepare_llm_kwargs(messages, bucket, kwargs),
+            call_type=bucket,
+        )
+        self._consume_response(bucket, response)
+        return response
 
     def analyze_query_and_plan(
         self, shared_prompt_templates: Dict[str, Any]
@@ -55,9 +103,23 @@ class LeadAgent(BaseAgentWithTools):
         )
         try:
             outputs, plan = run_with_validation(
-                self.llm, planning_messages, self._validate_plan
+                self.llm,
+                planning_messages,
+                self._validate_plan,
+                invoke_fn=lambda current_messages, current_kwargs: cast(
+                    AIMessage,
+                    self._invoke_with_metrics(
+                        self.llm,
+                        current_messages,
+                        agent_id="lead_agent",
+                        llm_kwargs=current_kwargs,
+                        call_type="planning",
+                    ),
+                ),
+                **self._prepare_llm_kwargs(planning_messages, "planning"),
             )
             for i, output in enumerate(outputs):
+                self._consume_response("planning", output)
                 postfix = f"_{i}" if i > 0 else ""
                 self.conv_history.add_response(
                     llm_response=output,
@@ -84,9 +146,11 @@ class LeadAgent(BaseAgentWithTools):
         # Check each subtask has required fields
         for i, subtask in enumerate(subtasks):
             error_msg = ""
-            if not all(key in subtask for key in ["agent_id", "objective"]):
+            if not all(key in subtask for key in ["agent_id", "objective", "focus"]):
                 missing_keys = [
-                    key for key in ["agent_id", "objective"] if key not in subtask
+                    key
+                    for key in ["agent_id", "objective", "focus"]
+                    if key not in subtask
                 ]
                 error_msg += (
                     f"subtask in index {i} missing required fields: {missing_keys}\n"
@@ -131,6 +195,10 @@ class LeadAgent(BaseAgentWithTools):
                 "prompts",
                 "env_prompts",
                 "tools",
+                "memory",
+                "llm_params_dict",
+                "budget_allocator",
+                "budget_manager",
             ]
         }
 
@@ -149,8 +217,11 @@ class LeadAgent(BaseAgentWithTools):
                 strategy=subtask.focus,
                 task_instance=task_instance,
                 min_iterations_per_agent=self.min_iterations_per_agent,
+                llm_params_dict=self.llm_params_dict,
+                budget_allocator=self.budget_allocator,
                 **filtered_subagent_kwargs,
             )
+            subagent.budget_manager = self.budget_manager
             self.subagents[subtask.agent_id] = subagent
 
         logger.info(
@@ -164,13 +235,13 @@ class LeadAgent(BaseAgentWithTools):
     ) -> OrchestrationResult:
         """Main orchestration loop for coordinating multiple agents"""
         start_time = time.time()
-        max_execution_time = 300
         # Store original query in memory
         shared_prompt_templates = self.get_dataset_prompt_templates(
             dataset_instance=task_instance
         )
         self.shared_prompt_templates = shared_prompt_templates
         self.memory.original_task = shared_prompt_templates["task_instance"]
+        self.llm_params_dict = llm_params_dict or {}
 
         # Step 1: Analyze and plan
         plan = self.analyze_query_and_plan(shared_prompt_templates)
@@ -182,42 +253,68 @@ class LeadAgent(BaseAgentWithTools):
 
         # Step 3: Orchestrate work in rounds
         round_num = 0
-        max_rounds = 5
-        start_time = time.time()
-        max_execution_time = 300
-
         round_results = None
-        while round_num < max_rounds:
+        completion_reason = "max_rounds_reached"
+        while round_num < self.max_rounds:
             # Check timeout
-            if time.time() - start_time > max_execution_time:
+            if time.time() - start_time > self.max_execution_time:
                 logger.warning("Execution timeout reached, stopping early")
+                completion_reason = "timeout"
                 break
 
             round_num += 1
             logger.info(f"\n=== Orchestration Round {round_num} ===")
 
-            round_results = await self._coordinate_and_run_subagents(plan, round_num)
+            try:
+                round_results = await self._coordinate_and_run_subagents(plan, round_num)
+            except TokenBudgetExceeded:
+                logger.warning(f"Token budget exceeded during round {round_num}, stopping early")
+                completion_reason = "budget_exhausted"
+                break
 
             if not round_results:
                 logger.warning(f"No results from round {round_num}, stopping")
+                completion_reason = "no_active_workers"
                 break
 
             # Update memory with round results
             self._update_memory_with_turn_results(round_results)
 
             # Check if we should stop orchestration
-            if self._should_stop_orchestration(round_num, round_results):
-                logger.info(f"Orchestrator decided to stop after round {round_num}")
+            try:
+                if self._should_stop_orchestration(round_num, round_results):
+                    logger.info(f"Orchestrator decided to stop after round {round_num}")
+                    completion_reason = (
+                        "worker_success"
+                        if any(result.env_status.success for result in round_results.values())
+                        else "orchestrator_stop"
+                    )
+                    break
+            except TokenBudgetExceeded:
+                logger.warning("Token budget exceeded during stopping decision, stopping early")
+                completion_reason = "budget_exhausted"
                 break
 
         # Step 5: Synthesize answer
         synthesis = None
-        if round_results and all(
+        if round_results and any(
+            result.env_status.success for result in round_results.values()
+        ):
+            for result in round_results.values():
+                if result.env_status.success and result.findings:
+                    synthesis = result.findings
+                    break
+        elif round_results and all(
             not result.env_status.success for result in round_results.values()
         ):
-            synthesis = self._synthesize_findings()
+            try:
+                synthesis = self._synthesize_findings()
+            except TokenBudgetExceeded:
+                logger.warning("Token budget exceeded during synthesis, returning partial results")
+                synthesis = None
 
         return OrchestrationResult(
+            architecture="multi-agent-centralized",
             plan=plan,
             synthesized_answer=synthesis,
             subagent_conversations={
@@ -235,6 +332,8 @@ class LeadAgent(BaseAgentWithTools):
             },
             total_findings=len(self.memory.all_findings),
             lead_agent_conversation=self.conv_history,
+            total_rounds=round_num,
+            completion_reason=completion_reason,
         )
 
     async def _coordinate_and_run_subagents(
@@ -295,7 +394,7 @@ class LeadAgent(BaseAgentWithTools):
         try:
             done, pending = await asyncio.wait(
                 [task for _, task in tasks],
-                timeout=120,  # 2 minutes timeout per round
+                timeout=self.worker_timeout,
             )
             # Cancel pending tasks
             for task in pending:
@@ -367,7 +466,7 @@ class LeadAgent(BaseAgentWithTools):
             coordination_messages = template.compile(
                 **self.shared_prompt_templates,
                 original_query=self.memory.original_task,
-                round_num=round_num + 1,
+                round_num=round_num,
                 agent_id=agent.agent_id,
                 agent_objective=objective,
                 agent_strategy=strategy,
@@ -383,7 +482,7 @@ class LeadAgent(BaseAgentWithTools):
             self.prompts["lead_agent"].get_template("coordination")
         )
 
-        response = self.llm.invoke(coordination_messages)
+        response = self._invoke_llm(coordination_messages, bucket="coordination")
         self.conv_history.add_response(
             llm_response=response,
             tag=f"coordination_{round_num}",
@@ -407,7 +506,7 @@ class LeadAgent(BaseAgentWithTools):
             )
             fallback_messages = prepare_prompt_messages(coordination_fallback_template)
 
-            response = self.llm.invoke(fallback_messages)
+            response = self._invoke_llm(fallback_messages, bucket="coordination")
             self.conv_history.add_response(
                 llm_response=response,
                 tag=f"coordination_fallback_{round_num}",
@@ -427,7 +526,7 @@ class LeadAgent(BaseAgentWithTools):
         self, agent: WorkerSubagent, objective: str, round_num: int
     ) -> str:
         """Fallback message when LLM feedback fails"""
-        if round_num == 0:
+        if round_num == 1:
             return f"Work on: {objective}"
         elif agent.conv_history.total_iterations < self.min_iterations_per_agent:
             remaining = (
@@ -452,7 +551,7 @@ class LeadAgent(BaseAgentWithTools):
 
         # Get findings from all subagents
         for agent_id, agent in self.subagents.items():
-            for finding in self.memory.agent_findings[agent_id]:
+            for finding in self.memory.agent_findings.get(agent_id, []):
                 if finding and len(finding.strip()) > 20:
                     all_agent_findings.append(f"Agent {agent_id}: {finding[:200]}...")
         # Also include current round results for immediate context
@@ -475,6 +574,7 @@ class LeadAgent(BaseAgentWithTools):
         stopping_template = self.prompts["lead_agent"].get_template("stopping_decision")
         decision_messages = stopping_template.compile(
             **self.shared_prompt_templates,
+            query=self.memory.original_task,
             round_num=round_num,
             total_findings=len(all_agent_findings),
             total_agents=len(self.subagents),
@@ -486,7 +586,7 @@ class LeadAgent(BaseAgentWithTools):
             else "No significant findings collected yet",
         )
 
-        response = self.llm.invoke(decision_messages)
+        response = self._invoke_llm(decision_messages, bucket="coordination")
         self.conv_history.add_response(
             llm_response=response,
             tag=f"stopping_decision_{round_num}",
@@ -517,7 +617,7 @@ class LeadAgent(BaseAgentWithTools):
             all_findings=join_with_leading_dash(all_findings),
         )
 
-        response = self.llm.invoke(synthesis_messages)
+        response = self._invoke_llm(synthesis_messages, bucket="synthesis")
         self.conv_history.add_response(
             llm_response=response,
             tag="synthesis",

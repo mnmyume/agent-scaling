@@ -1,8 +1,11 @@
+from __future__ import annotations
+
+import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, Tuple, TypeVar, cast
 
 from langchain_core.language_models import LanguageModelInput
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.runnables import Runnable
 
 from agent_scaling.config.dataset import DatasetConfig
@@ -11,6 +14,9 @@ from agent_scaling.config.prompts import Prompt
 from agent_scaling.datasets import Dataset, DatasetInstance, DatasetInstanceOutput
 from agent_scaling.env import AgentEnvironment, get_env_cls
 from agent_scaling.llm import ChatLiteLLMLC
+
+if TYPE_CHECKING:
+    from agent_scaling.utils.token_budget import TokenBudgetManager
 
 AgentEnvType = TypeVar("AgentEnvType", bound=AgentEnvironment)
 
@@ -27,6 +33,7 @@ class BaseAgent:
         prompts: Dict[str, Prompt],
         **kwargs,
     ):
+        self.metrics_collector = kwargs.pop("metrics_collector", None)
         self.llm = llm
         self.dataset = dataset
         assert dataset.task_shared_prompts is not None, (
@@ -68,6 +75,45 @@ class BaseAgent:
                 f"Prompt(s) **{', '.join(required_but_not_found)}** are required for {cls.__name__} but not found."
             )
 
+    def _invoke_with_metrics(
+        self,
+        runnable: Runnable[LanguageModelInput, BaseMessage] | ChatLiteLLMLC,
+        messages: LanguageModelInput,
+        *,
+        agent_id: str,
+        llm_kwargs: Optional[Dict[str, Any]] = None,
+        call_type: str = "reasoning",
+        round_num: Optional[int] = None,
+        iteration: Optional[int] = None,
+    ) -> BaseMessage:
+        llm_kwargs = llm_kwargs or {}
+        start_time = time.perf_counter()
+        try:
+            response = runnable.invoke(messages, **llm_kwargs)
+        except Exception as exc:
+            if self.metrics_collector is not None:
+                self.metrics_collector.log_llm_failure(
+                    agent_id=agent_id,
+                    model=getattr(runnable, "model", getattr(self.llm, "model", "unknown")),
+                    latency_ms=(time.perf_counter() - start_time) * 1000,
+                    call_type=call_type,
+                    round=round_num,
+                    iteration=iteration,
+                    error_message=str(exc),
+                )
+            raise
+
+        if self.metrics_collector is not None and isinstance(response, AIMessage):
+            self.metrics_collector.log_llm_response(
+                agent_id=agent_id,
+                response=cast(AIMessage, response),
+                latency_ms=(time.perf_counter() - start_time) * 1000,
+                call_type=call_type,
+                round=round_num,
+                iteration=iteration,
+            )
+        return response
+
 
 class BaseAgentSystem(ABC):
     @abstractmethod
@@ -77,6 +123,7 @@ class BaseAgentSystem(ABC):
         instance_dir: Optional[str] = None,
         llm_params: Optional[LLMParams] = None,
         instance_idx: Optional[int] = None,
+        budget_manager: Optional[TokenBudgetManager] = None,
     ) -> DatasetInstanceOutput:
         """
         Run the agent on a single instance and return the llm output.
@@ -146,6 +193,8 @@ class BaseAgentWithTools(BaseAgent, Generic[AgentEnvType]):
             env_prompts=self.env_prompts,
             agent_id=agent_id,
         )
+        if self.metrics_collector is not None:
+            env.attach_metrics_collector(self.metrics_collector)
         return env
 
     def init_environment(

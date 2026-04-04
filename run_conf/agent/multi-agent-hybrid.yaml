@@ -1,13 +1,18 @@
 name: multi-agent-hybrid
 prompts:
   lead_agent:
-    local_path: prompts/multiagent_research/lead_agent.yaml
+    local_path: prompts/multi-agent/lead_agent.yaml
   subagent:
-    local_path: prompts/multiagent_research/subagent.yaml
+    local_path: prompts/multi-agent/subagent.yaml
 
-# Hybrid multi-agent parameters
-n_base_agents: 3
-min_iterations_per_agent: 3
-max_iterations_per_agent: 7
-enable_peer_communication: true  # Enable agent-driven peer communication
-task_blurb: "hybrid coordinator" 
+agent_specific_config:
+  n_base_agents: 3
+  min_iterations_per_agent: 3
+  max_iterations_per_agent: 3
+  max_rounds: 5
+  peer_rounds: 1
+  peer_fanout: 1
+  peer_max_iterations: 1
+  task_blurb: "hybrid coordinator"
+  max_execution_time: 300
+  worker_timeout: 180

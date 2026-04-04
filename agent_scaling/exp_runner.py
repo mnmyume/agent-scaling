@@ -12,7 +12,9 @@ from agent_scaling.agents import AgentSystem
 from agent_scaling.config.run import RunConfig
 from agent_scaling.datasets import Dataset, DatasetInstance
 from agent_scaling.logger import logger
+from agent_scaling.metrics import aggregate_instance_runtime_metrics
 from agent_scaling.utils import write_json, write_yaml
+from agent_scaling.utils.token_budget import TokenBudgetManager
 
 
 class InstanceSave(BaseModel):
@@ -20,6 +22,11 @@ class InstanceSave(BaseModel):
     output: Dict[str, Any]
     metrics: Dict[str, Union[int, float, str]]
     expected_output: Optional[Any] = None
+
+
+class ProcessedInstanceResult(BaseModel):
+    eval_metrics: Any
+    runtime_metrics: Optional[Dict[str, Any]] = None
 
 
 class ExperimentRunner:
@@ -65,6 +72,7 @@ class ExperimentRunner:
 
     def run(self):
         metrics = []
+        runtime_metrics = []
         instances = self._get_instances()
 
         if self.log_langfuse:
@@ -87,14 +95,28 @@ class ExperimentRunner:
                 os.makedirs(instance_dir, exist_ok=True)
 
             # Use the core worker function
-            inst_metrics = self._process_single_instance(i, instance, instance_dir)
-            metrics.append(inst_metrics)
+            inst_result = self._process_single_instance(i, instance, instance_dir)
+            metrics.append(inst_result.eval_metrics)
+            if inst_result.runtime_metrics is not None:
+                runtime_metrics.append(inst_result.runtime_metrics)
 
         all_metrics = self.dataset.get_metrics(metrics)
         if self.output_dir is not None:
             write_json(
                 all_metrics,
                 os.path.join(self.output_dir, "dataset_eval_metrics.json"),
+                indent=True,
+            )
+            write_json(
+                aggregate_instance_runtime_metrics(
+                    runtime_metrics,
+                    dataset_id=self.dataset.dataset_id,
+                    architecture=self.config.agent.name,
+                    model=self.config.llm.model,
+                    token_budget=self.config.token_budget.total_tokens_per_instance,
+                    run_dir=self.output_dir,
+                ),
+                os.path.join(self.output_dir, "run_runtime_metrics.json"),
                 indent=True,
             )
         return all_metrics
@@ -104,7 +126,7 @@ class ExperimentRunner:
         i: int,
         instance,
         instance_dir: Optional[str] = None,
-    ) -> Dict[str, Union[int, float]]:
+    ) -> ProcessedInstanceResult:
         """
         Core worker function to process a single instance.
         This can be reused for both sequential and parallel processing.
@@ -121,11 +143,17 @@ class ExperimentRunner:
         context_manager = self._get_context_manager(i)
         with context_manager as span:
             agent = self.config.get_agent()
+            budget_cfg = self.config.token_budget
+            budget_manager = TokenBudgetManager.create(
+                enabled=budget_cfg.enabled,
+                total_tokens=budget_cfg.total_tokens_per_instance,
+            )
             output = agent.run_agent(
                 instance,
                 instance_dir=instance_dir,
                 llm_params=self.config.llm.params,
                 instance_idx=i,
+                budget_manager=budget_manager,
             )
             inst_metrics = self.dataset.get_instance_eval_metrics(output)
             inst_output = self.dataset.get_instance_eval_output(output)
@@ -140,6 +168,8 @@ class ExperimentRunner:
                         value=metric,
                     )
 
+            runtime_metrics = self._finalize_runtime_metrics(output, inst_metrics, inst_output)
+
             if instance_dir is not None:
                 output_save = InstanceSave(
                     inp=instance.get_prompt_info(),
@@ -153,7 +183,49 @@ class ExperimentRunner:
                     indent=True,
                 )
 
-            return inst_metrics
+            return ProcessedInstanceResult(
+                eval_metrics=inst_metrics,
+                runtime_metrics=runtime_metrics,
+            )
+
+    def _finalize_runtime_metrics(
+        self,
+        output,
+        inst_metrics: Dict[str, Any],
+        inst_output: Dict[str, Any],
+    ) -> Optional[Dict[str, Any]]:
+        runtime_metrics = output.runtime_metrics
+        if runtime_metrics is None:
+            return None
+
+        runtime_metrics["evaluation"] = {
+            "metrics": inst_metrics,
+            "output": inst_output,
+        }
+        task_success = self.dataset.get_instance_success(inst_metrics, output)
+        if task_success is not None:
+            system_metrics = runtime_metrics.setdefault("system_metrics", {})
+            summary = runtime_metrics.setdefault("summary", {})
+            system_metrics["task_success"] = bool(task_success)
+            system_metrics["task_success_source"] = "dataset_evaluation"
+            summary["task_success"] = bool(task_success)
+            summary["task_success_source"] = "dataset_evaluation"
+
+            total_tokens = (
+                system_metrics.get("total_tokens_used")
+                or summary.get("total_tokens")
+                or 0
+            )
+            success_per_1k_tokens = (
+                1000 * int(task_success) / total_tokens if total_tokens else None
+            )
+            system_metrics["success_per_1k_tokens"] = success_per_1k_tokens
+            summary["success_per_1k_tokens"] = success_per_1k_tokens
+
+        if output.runtime_metrics_path is not None:
+            write_json(runtime_metrics, output.runtime_metrics_path, indent=True)
+
+        return runtime_metrics
 
     def run_parallel(self, num_workers: int = 4):
         """
@@ -180,6 +252,7 @@ class ExperimentRunner:
         metrics: List[Dict[str, int | float] | str] = [""] * len(
             work_items
         )  # Pre-allocate to maintain order
+        runtime_metrics: List[Optional[Dict[str, Any]]] = [None] * len(work_items)
 
         # Parallel processing with progress bar
 
@@ -199,7 +272,8 @@ class ExperimentRunner:
                     i = futures[future]
                     try:
                         result = future.result()
-                        metrics[i] = result
+                        metrics[i] = result.eval_metrics
+                        runtime_metrics[i] = result.runtime_metrics
                     except Exception as exc:
                         tb_str = "".join(
                             traceback.format_exception(
@@ -220,6 +294,22 @@ class ExperimentRunner:
             write_json(
                 all_metrics,
                 os.path.join(self.output_dir, "dataset_eval_metrics.json"),
+                indent=True,
+            )
+            write_json(
+                aggregate_instance_runtime_metrics(
+                    [
+                        metric
+                        for metric in runtime_metrics
+                        if metric is not None
+                    ],
+                    dataset_id=self.dataset.dataset_id,
+                    architecture=self.config.agent.name,
+                    model=self.config.llm.model,
+                    token_budget=self.config.token_budget.total_tokens_per_instance,
+                    run_dir=self.output_dir,
+                ),
+                os.path.join(self.output_dir, "run_runtime_metrics.json"),
                 indent=True,
             )
         return all_metrics
