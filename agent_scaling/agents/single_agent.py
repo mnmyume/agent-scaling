@@ -27,6 +27,7 @@ from agent_scaling.utils.token_budget import (
 )
 
 from .registry import register_agent
+from .tool_utils import build_error_tool_message
 
 
 @register_agent("single-agent")
@@ -109,12 +110,13 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
                         completion_reason = "done_tool"
                 except Exception as e:
                     action = ""
-                    messages.append(
-                        {
-                            "role": "user",
-                            "content": f"ERROR: Tool **{tool_name}** failed with error: {str(e)}. Please check the tool call.",
-                        }
+                    tool_name = tool_name or tool_call.get("name", "")
+                    tool_resp = build_error_tool_message(
+                        tool_call,
+                        e,
+                        fallback_name=tool_name,
                     )
+                    messages.append(convert_to_openai_messages(tool_resp))
                     logger.warning(
                         f"Tool **{tool_name}** failed with error: {str(e)}\n{traceback.format_exc()}"
                     )

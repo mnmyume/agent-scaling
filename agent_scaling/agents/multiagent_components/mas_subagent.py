@@ -7,6 +7,7 @@ from langchain_core.messages.utils import convert_to_openai_messages
 
 from agent_scaling.agents.base import BaseAgentWithTools
 from agent_scaling.agents.output_validation import validate_json
+from agent_scaling.agents.tool_utils import build_error_tool_message
 from agent_scaling.datasets import DatasetInstance
 from agent_scaling.logger import logger
 from agent_scaling.utils.token_budget import TokenBudgetManager, extract_token_usage
@@ -204,11 +205,13 @@ class WorkerSubagent(BaseAgentWithTools):
                     tool_name = tool_call["name"]
                     tool_resp = self.env.execute_tool(tool_call)
                 except Exception as e:
-                    # Add error message to conversation state (consistent with single_agent.py)
-                    error_msg = {
-                        "role": "user",
-                        "content": f"ERROR: Tool **{tool_name}** failed with error: {str(e)}. Please check the tool call.",
-                    }
+                    error_msg = convert_to_openai_messages(
+                        build_error_tool_message(
+                            tool_call,
+                            e,
+                            fallback_name=tool_name,
+                        )
+                    )
                     messages.append(error_msg)  # type: ignore
                     self.conv_history.add_internal_message(
                         message=error_msg,

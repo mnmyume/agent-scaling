@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from langchain_core.messages.utils import convert_to_openai_messages
 
+from agent_scaling.agents.tool_utils import build_error_tool_message
 from agent_scaling.logger import logger
 
 from .conversation import WorkerConversation
@@ -297,10 +298,13 @@ class Worker:
                         self.memory.add_findings(self.agent_id, [error_finding])
                         self.conversation_state["accumulated_findings"].append(error_finding)
                         
-                        error_msg = {
-                            "role": "user",
-                            "content": f"ERROR: Tool **{tool_name}** failed with error: {str(e)}. Please check the tool call."
-                        }
+                        error_msg = convert_to_openai_messages(
+                            build_error_tool_message(
+                                tool_call,
+                                e,
+                                fallback_name=tool_name,
+                            )
+                        )
                         messages.append(error_msg)
                         logger.warning(f"Tool **{tool_name}** failed with error: {str(e)}")
                         

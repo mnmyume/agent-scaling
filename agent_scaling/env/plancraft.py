@@ -91,6 +91,8 @@ class PlancraftEnvironment(AgentEnvironmentTools):
         """
         Transfer a specific quantity of items from one slot to another.
         Specifically, move from [slot_from] to [slot_to] with target quantity [quantity].
+        Valid slots are [0], crafting grid slots [A1] to [C3], and inventory slots [I1] to [I36].
+        Always include the square brackets in tool arguments.
 
         Example:
         - move(slot_from="[I2]", slot_to="[A1]", quantity=3) to move 3 items from slot I2 to A1
@@ -109,6 +111,8 @@ class PlancraftEnvironment(AgentEnvironmentTools):
         """
         Smelt an item in a furnace and moves the output to a specific slot.
         Specifically, smelt from [slot_from] to [slot_to] with target quantity [quantity].
+        Valid slots are [0], crafting grid slots [A1] to [C3], and inventory slots [I1] to [I36].
+        Always include the square brackets in tool arguments.
 
         Example:
         - smelt(slot_from="[I5]", slot_to="[I6]", quantity=1)
