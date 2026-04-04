@@ -22,7 +22,6 @@ from agent_scaling.env import AgentEnvironment
 from agent_scaling.logger import logger
 from agent_scaling.utils import write_yaml
 from agent_scaling.utils.token_budget import (
-    TokenBudgetExceeded,
     TokenBudgetManager,
     extract_token_usage,
 )
@@ -38,7 +37,7 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
 
     required_prompts = ["main"]
 
-    def __init__(self, max_steps: int = 30, *args, **kwargs):
+    def __init__(self, max_steps: int = 10, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.max_steps = max_steps
 
@@ -73,32 +72,23 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
         final_answer = ""
         final_env_output = {}
         is_done = False
-        budget_exceeded = False
         completion_reason = "max_steps_reached"
         for step in range(self.max_steps):
             env.set_metrics_context(round_num=1, iteration=step + 1)
-            try:
-                response = self._invoke_with_metrics(
-                    llm_w_tools,
-                    messages,  # type: ignore[arg-type]
-                    agent_id="single_agent",
-                    llm_kwargs=llm_params_dict,
-                    call_type="agent_step",
-                    round_num=1,
-                    iteration=step + 1,
-                )
-                response = cast(AIMessage, response)
+            response = self._invoke_with_metrics(
+                llm_w_tools,
+                messages,  # type: ignore[arg-type]
+                agent_id="single_agent",
+                llm_kwargs=llm_params_dict,
+                call_type="agent_step",
+                round_num=1,
+                iteration=step + 1,
+            )
+            response = cast(AIMessage, response)
 
-                if budget_manager is not None:
-                    inp_tok, out_tok = extract_token_usage(response)
-                    budget_manager.consume(inp_tok, out_tok)
-            except TokenBudgetExceeded:
-                logger.warning(
-                    f"Token budget exceeded at step {step} for instance {instance_idx}"
-                )
-                budget_exceeded = True
-                completion_reason = "budget_exhausted"
-                break
+            if budget_manager is not None:
+                inp_tok, out_tok = extract_token_usage(response)
+                budget_manager.consume(inp_tok, out_tok)
 
             if response.tool_calls:
                 response.tool_calls = [response.tool_calls[0]]
@@ -189,7 +179,7 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
             final_env_output=final_env_output,
             budget_used=budget_manager.used if budget_manager else 0,
             budget_remaining=budget_manager.remaining if budget_manager else 0,
-            budget_exceeded=budget_exceeded,
+            budget_exceeded=budget_manager.budget_exceeded if budget_manager else False,
             runtime_metrics=runtime_metrics,
             runtime_metrics_path=runtime_metrics_path,
             runtime_events_path=runtime_events_path,

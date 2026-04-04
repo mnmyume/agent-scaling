@@ -11,7 +11,6 @@ from agent_scaling.datasets import DatasetInstance
 from agent_scaling.logger import logger
 from agent_scaling.utils import join_with_leading_dash
 from agent_scaling.utils.token_budget import (
-    TokenBudgetExceeded,
     TokenBudgetManager,
     extract_token_usage,
 )
@@ -57,17 +56,6 @@ class LeadAgent(BaseAgentWithTools):
         self.budget_allocator: Optional[MASBudgetAllocator] = None
         self.llm_params_dict: Dict[str, Any] = {}
 
-    def _prepare_llm_kwargs(
-        self,
-        messages: Any,
-        bucket: str,
-        extra_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
-        kwargs = {**self.llm_params_dict, **(extra_kwargs or {})}
-        if self.budget_allocator is not None:
-            return self.budget_allocator.prepare_call(bucket, messages, kwargs)
-        return kwargs
-
     def _consume_response(self, bucket: str, response) -> None:
         if self.budget_allocator is not None:
             self.budget_allocator.consume_response(bucket, response)
@@ -82,7 +70,7 @@ class LeadAgent(BaseAgentWithTools):
             self.llm,
             messages,
             agent_id="lead_agent",
-            llm_kwargs=self._prepare_llm_kwargs(messages, bucket, kwargs),
+            llm_kwargs={**self.llm_params_dict, **kwargs},
             call_type=bucket,
         )
         self._consume_response(bucket, response)
@@ -116,7 +104,7 @@ class LeadAgent(BaseAgentWithTools):
                         call_type="planning",
                     ),
                 ),
-                **self._prepare_llm_kwargs(planning_messages, "planning"),
+                **self.llm_params_dict,
             )
             for i, output in enumerate(outputs):
                 self._consume_response("planning", output)
@@ -265,12 +253,7 @@ class LeadAgent(BaseAgentWithTools):
             round_num += 1
             logger.info(f"\n=== Orchestration Round {round_num} ===")
 
-            try:
-                round_results = await self._coordinate_and_run_subagents(plan, round_num)
-            except TokenBudgetExceeded:
-                logger.warning(f"Token budget exceeded during round {round_num}, stopping early")
-                completion_reason = "budget_exhausted"
-                break
+            round_results = await self._coordinate_and_run_subagents(plan, round_num)
 
             if not round_results:
                 logger.warning(f"No results from round {round_num}, stopping")
@@ -281,18 +264,13 @@ class LeadAgent(BaseAgentWithTools):
             self._update_memory_with_turn_results(round_results)
 
             # Check if we should stop orchestration
-            try:
-                if self._should_stop_orchestration(round_num, round_results):
-                    logger.info(f"Orchestrator decided to stop after round {round_num}")
-                    completion_reason = (
-                        "worker_success"
-                        if any(result.env_status.success for result in round_results.values())
-                        else "orchestrator_stop"
-                    )
-                    break
-            except TokenBudgetExceeded:
-                logger.warning("Token budget exceeded during stopping decision, stopping early")
-                completion_reason = "budget_exhausted"
+            if self._should_stop_orchestration(round_num, round_results):
+                logger.info(f"Orchestrator decided to stop after round {round_num}")
+                completion_reason = (
+                    "worker_success"
+                    if any(result.env_status.success for result in round_results.values())
+                    else "orchestrator_stop"
+                )
                 break
 
         # Step 5: Synthesize answer
@@ -307,11 +285,7 @@ class LeadAgent(BaseAgentWithTools):
         elif round_results and all(
             not result.env_status.success for result in round_results.values()
         ):
-            try:
-                synthesis = self._synthesize_findings()
-            except TokenBudgetExceeded:
-                logger.warning("Token budget exceeded during synthesis, returning partial results")
-                synthesis = None
+            synthesis = self._synthesize_findings()
 
         return OrchestrationResult(
             architecture="multi-agent-centralized",

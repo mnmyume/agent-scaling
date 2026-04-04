@@ -13,7 +13,7 @@ from agent_scaling.config.llm import LLMParams
 from agent_scaling.datasets import DatasetInstance, DatasetInstanceOutputWithTrajectory
 from agent_scaling.logger import logger
 from agent_scaling.utils import join_with_leading_dash, write_yaml
-from agent_scaling.utils.token_budget import TokenBudgetExceeded, TokenBudgetManager
+from agent_scaling.utils.token_budget import TokenBudgetManager
 
 from .budgeting import MASBudgetAllocator
 from .conversation import CommunicationEvent, OrchestrationResult, SubAgentRoundResult
@@ -106,6 +106,7 @@ class BaseMultiAgentSystem(AgentSystemWithTools, ABC):
             max_iterations_per_agent=self.max_iterations_per_agent,
             max_rounds=self.max_rounds,
             peer_rounds=self.peer_rounds,
+            peer_max_iterations=self.peer_max_iterations,
         )
 
         logger.info(
@@ -270,16 +271,11 @@ class BaseMultiAgentSystem(AgentSystemWithTools, ABC):
         budget_allocator: MASBudgetAllocator,
         bucket: str,
     ):
-        invoke_kwargs = budget_allocator.prepare_call(
-            bucket=bucket,
-            messages=messages,
-            llm_kwargs=llm_params_dict,
-        )
         response = self._invoke_with_metrics(
             self.llm,
             messages,
             agent_id="lead_agent",
-            llm_kwargs=invoke_kwargs,
+            llm_kwargs=llm_params_dict,
             call_type=bucket,
         )
         budget_allocator.consume_response(bucket, response)
@@ -307,8 +303,6 @@ class BaseMultiAgentSystem(AgentSystemWithTools, ABC):
             if task in done:
                 try:
                     results[agent_id] = await task
-                except TokenBudgetExceeded:
-                    raise
                 except Exception as exc:
                     results[agent_id] = SubAgentRoundResult(
                         agent_id=agent_id,

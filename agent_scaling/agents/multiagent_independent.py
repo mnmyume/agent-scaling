@@ -1,8 +1,7 @@
 from typing import Any, Dict, Optional
 
 from agent_scaling.datasets import DatasetInstance
-from agent_scaling.logger import logger
-from agent_scaling.utils.token_budget import TokenBudgetExceeded, TokenBudgetManager
+from agent_scaling.utils.token_budget import TokenBudgetManager
 
 from .multiagent_components.budgeting import MASBudgetAllocator
 from .multiagent_components.system import BaseMultiAgentSystem
@@ -54,25 +53,19 @@ class IndependentMultiAgentSystem(BaseMultiAgentSystem):
         if synthesized_answer is None:
             all_findings = self._format_findings_for_synthesis(agent_findings)
             if all_findings:
-                try:
-                    synthesis_messages = self.prompts["lead_agent"].get_template(
-                        "synthesis"
-                    ).compile(
-                        **shared_prompt_templates,
-                        all_findings=all_findings,
-                    )
-                    response = self._invoke_system_llm(
-                        messages=synthesis_messages,
-                        llm_params_dict=llm_params_dict,
-                        budget_allocator=budget_allocator,
-                        bucket="synthesis",
-                    )
-                    synthesized_answer = response.text().strip()
-                except TokenBudgetExceeded:
-                    logger.warning(
-                        "Budget exhausted during independent aggregation; returning the best worker summary."
-                    )
-                    synthesized_answer = self._select_success_answer(round_results)
+                synthesis_messages = self.prompts["lead_agent"].get_template(
+                    "synthesis"
+                ).compile(
+                    **shared_prompt_templates,
+                    all_findings=all_findings,
+                )
+                response = self._invoke_system_llm(
+                    messages=synthesis_messages,
+                    llm_params_dict=llm_params_dict,
+                    budget_allocator=budget_allocator,
+                    bucket="synthesis",
+                )
+                synthesized_answer = response.text().strip()
 
         return self._build_result(
             plan=plan,

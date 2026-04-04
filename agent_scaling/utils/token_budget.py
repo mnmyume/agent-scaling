@@ -6,16 +6,15 @@ from langchain_core.messages import AIMessage
 from agent_scaling.logger import logger
 
 
-class TokenBudgetExceeded(Exception):
-    """Raised when the token budget for an instance run is exhausted."""
-
-    pass
-
-
 class TokenBudgetManager:
     """
-    Tracks and enforces a per-instance token budget shared across all LLM calls
-    within a single agent system run. When budget is exhausted, raises TokenBudgetExceeded.
+    Tracks a per-instance token budget reference shared across all LLM calls
+    within a single agent system run.
+
+    Runtime control is handled by architecture-specific iteration and round
+    limits; this manager only records token usage against a nominal reference
+    budget for monitoring and downstream metrics.
+
     Thread-safe for async multi-agent use.
     """
 
@@ -29,15 +28,10 @@ class TokenBudgetManager:
         self._lock = threading.Lock()
 
     def consume(self, input_tokens: int, output_tokens: int) -> None:
-        """Call after every LLM invocation. Raises TokenBudgetExceeded if over budget."""
+        """Call after every LLM invocation to record observed token usage."""
         with self._lock:
             self._input_tokens_used += input_tokens
             self._output_tokens_used += output_tokens
-            if self.used > self._total_budget:
-                raise TokenBudgetExceeded(
-                    f"Token budget exceeded: used {self.used}/{self._total_budget} "
-                    f"(input={self._input_tokens_used}, output={self._output_tokens_used})"
-                )
 
     @property
     def remaining(self) -> int:

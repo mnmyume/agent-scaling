@@ -200,7 +200,7 @@ exp_outputs/
 
 ### Output Files
 
-- `run_config.yaml`: resolved experiment metadata, including token budget and run limits
+- `run_config.yaml`: resolved experiment metadata, including the reference token budget and run limits
 - `dataset_eval_metrics.json`: dataset-level evaluation summary
 - `run_runtime_metrics.json`: aggregated runtime metrics across completed instances in the run
 - `instance_runs/<idx>/runtime_metrics.json`: per-instance raw runtime metrics
@@ -260,7 +260,7 @@ debug: true                         # Debug mode
 max_instances: 3                    # Max instances to process
 token_budget:
   enabled: true
-  total_tokens_per_instance: 4800   # Shared SAS/MAS per-instance budget
+  total_tokens_per_instance: 4800   # Monitored reference budget; iteration caps remain the hard limit
 ```
 
 ### Multi-Agent Config (`run_conf/agent/multi-agent-centralized.yaml`)

@@ -22,6 +22,7 @@ class TokenBudgetConfig(BaseModel):
 
 
 class MultiAgentConfig(BaseModel):
+    max_steps: Optional[int] = None
     n_base_agents: int = 3
     min_iterations_per_agent: int = 3
     max_iterations_per_agent: int = 3

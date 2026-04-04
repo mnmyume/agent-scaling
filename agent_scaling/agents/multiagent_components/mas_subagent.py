@@ -98,17 +98,6 @@ class WorkerSubagent(BaseAgentWithTools):
         worker.budget_allocator = budget_allocator
         return worker
 
-    def _prepare_llm_kwargs(
-        self,
-        messages: Any,
-        budget_bucket: str,
-        extra_kwargs: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
-        kwargs = {**self.llm_params_dict, **(extra_kwargs or {})}
-        if self.budget_allocator is not None:
-            return self.budget_allocator.prepare_call(budget_bucket, messages, kwargs)
-        return kwargs
-
     def _consume_response(self, budget_bucket: str, response: AIMessage) -> None:
         if self.budget_allocator is not None:
             self.budget_allocator.consume_response(budget_bucket, response)
@@ -192,11 +181,7 @@ class WorkerSubagent(BaseAgentWithTools):
                     self.llm_w_tools,
                     messages,  # type: ignore
                     agent_id=self.agent_id,
-                    llm_kwargs=self._prepare_llm_kwargs(
-                        messages=messages,
-                        budget_bucket=budget_bucket,
-                        extra_kwargs={"num_retries": 2},
-                    ),
+                    llm_kwargs={**self.llm_params_dict, "num_retries": 2},
                     call_type=f"{budget_bucket}_tool_loop",
                     round_num=self.conv_history.current_round,
                     iteration=curr_iteration,
@@ -281,7 +266,7 @@ class WorkerSubagent(BaseAgentWithTools):
             self.llm,
             messages,
             agent_id=self.agent_id,
-            llm_kwargs=self._prepare_llm_kwargs(messages, budget_bucket),
+            llm_kwargs=self.llm_params_dict,
             call_type=f"{budget_bucket}_summary",
             round_num=self.conv_history.current_round,
             iteration=curr_iteration,
@@ -405,7 +390,7 @@ class WorkerSubagent(BaseAgentWithTools):
             self.llm,
             messages,
             agent_id=self.agent_id,
-            llm_kwargs=self._prepare_llm_kwargs(messages, "consensus"),
+            llm_kwargs=self.llm_params_dict,
             call_type="consensus",
             round_num=self.conv_history.current_round,
             iteration=self.conv_history.curr_iteration,

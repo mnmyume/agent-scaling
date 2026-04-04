@@ -13,10 +13,9 @@ from .core import (
     write_json,
     write_yaml,
 )
-from .token_budget import TokenBudgetExceeded, TokenBudgetManager, extract_token_usage
+from .token_budget import TokenBudgetManager, extract_token_usage
 
 __all__ = [
-    "TokenBudgetExceeded",
     "TokenBudgetManager",
     "add_local_cache",
     "clear_callbacks",

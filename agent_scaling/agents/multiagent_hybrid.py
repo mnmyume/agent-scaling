@@ -3,8 +3,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from agent_scaling.datasets import DatasetInstance
-from agent_scaling.logger import logger
-from agent_scaling.utils.token_budget import TokenBudgetExceeded, TokenBudgetManager
+from agent_scaling.utils.token_budget import TokenBudgetManager
 
 from .multiagent_components.budgeting import MASBudgetAllocator
 from .multiagent_components.conversation import CommunicationEvent
@@ -92,21 +91,13 @@ class HybridMultiAgentSystem(BaseMultiAgentSystem):
                     completion_reason = "worker_success"
                     break
 
-            try:
-                if lead_agent._should_stop_orchestration(round_num, latest_results):
-                    completion_reason = "orchestrator_stop"
-                    break
-            except TokenBudgetExceeded:
-                logger.warning("Budget exhausted during hybrid stopping decision.")
-                completion_reason = "budget_exhausted"
+            if lead_agent._should_stop_orchestration(round_num, latest_results):
+                completion_reason = "orchestrator_stop"
                 break
 
         synthesized_answer = self._select_success_answer(latest_results)
         if synthesized_answer is None:
-            try:
-                synthesized_answer = lead_agent._synthesize_findings()
-            except TokenBudgetExceeded:
-                logger.warning("Budget exhausted during hybrid synthesis.")
+            synthesized_answer = lead_agent._synthesize_findings()
 
         return self._build_result(
             plan=plan,
