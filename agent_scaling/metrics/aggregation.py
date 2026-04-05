@@ -162,6 +162,17 @@ def aggregate_instance_runtime_metrics(
     summaries = [metrics.get("summary", {}) for metrics in available]
     total_instances = len(available)
 
+    total_output_tokens = sum(
+        float(
+            summary.get("output_tokens", 0)
+            or sum(
+                float(entry.get("output_tokens", 0) or 0)
+                for entry in metrics.get("llm_log", [])
+            )
+        )
+        for metrics, summary in zip(available, summaries)
+    )
+
     total_turns = sum(float(summary.get("total_turns", 0) or 0) for summary in summaries)
     total_messages = sum(
         float(summary.get("total_messages", 0) or 0) for summary in summaries
@@ -212,6 +223,7 @@ def aggregate_instance_runtime_metrics(
         "total_messages": total_messages,
         "avg_messages": (total_messages / total_instances) if total_instances else 0.0,
         "message_density_c": compute_message_density(total_messages, total_turns),
+        "output_tokens": total_output_tokens,
         "total_tokens": total_tokens,
         "total_llm_calls": total_llm_calls,
         "total_tool_calls": total_tool_calls,

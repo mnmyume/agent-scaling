@@ -1,11 +1,11 @@
 defaults:
   - _self_
-  - agent: multi-agent-independent
+  - agent: multi-agent-decentralized
   - dataset: plancraft-test
   - llm: minimax-m2-7
 
 log_langfuse: false
-use_disk_cache: true
+use_disk_cache: false
 num_workers: 1
 debug: false
 max_instances: 100

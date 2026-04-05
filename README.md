@@ -254,7 +254,7 @@ llm:
     temperature: 0.0                # Generation temperature
 
 log_langfuse: false                 # Enable LangFuse tracing
-use_disk_cache: true                # Cache LLM calls
+use_disk_cache: false               # Keep false for research comparisons; true reuses saved LLM responses
 num_workers: 1                      # Parallel workers
 debug: true                         # Debug mode
 max_instances: 3                    # Max instances to process

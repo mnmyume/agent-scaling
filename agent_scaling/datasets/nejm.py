@@ -150,7 +150,15 @@ class NEJMDataset(Dataset):
             "full_response": instance_output.agent_output,
         }
 
-    def get_metrics(self, eval_outputs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def get_metrics(self, eval_outputs: List[Dict[str, Any] | str]) -> Dict[str, Any]:
+        num_instances = len(eval_outputs)
+        if num_instances == 0:
+            return {
+                "accuracy": 0.0,
+                "num_instances": 0,
+                "rationales": [],
+            }
+
         return {
             "accuracy": round(
                 sum(
@@ -160,10 +168,10 @@ class NEJMDataset(Dataset):
                         if isinstance(e, dict) and "correct" in e
                     ]
                 )
-                / len(eval_outputs),
+                / num_instances,
                 4,
             ),
-            "num_instances": len(eval_outputs),
+            "num_instances": num_instances,
             "rationales": [
                 e["rationale"]
                 for e in eval_outputs

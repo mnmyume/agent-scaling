@@ -95,10 +95,25 @@ class BrowseCompDataset(Dataset):
             }
         )
 
-    def get_metrics(self, eval_outputs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def get_metrics(self, eval_outputs: List[Dict[str, Any] | str]) -> Dict[str, Any]:
+        num_instances = len(eval_outputs)
+        if num_instances == 0:
+            return {
+                "avg_accuracy": 0.0,
+                "avg_confidence": 0.0,
+            }
+
         return {
-            "avg_accuracy": sum(e["is_correct"] for e in eval_outputs)
-            / len(eval_outputs),
-            "avg_confidence": sum(e["confidence"] for e in eval_outputs)
-            / len(eval_outputs),
+            "avg_accuracy": sum(
+                bool(e.get("is_correct", False))
+                for e in eval_outputs
+                if isinstance(e, dict)
+            )
+            / num_instances,
+            "avg_confidence": sum(
+                float(e.get("confidence", 0.0))
+                for e in eval_outputs
+                if isinstance(e, dict)
+            )
+            / num_instances,
         }

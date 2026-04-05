@@ -1,3 +1,4 @@
+import json
 from typing import Any, Dict, List, Mapping, Optional, cast
 
 import langfuse
@@ -11,6 +12,120 @@ from litellm.types.utils import ModelResponse
 
 class ChatLiteLLMLC(ChatLiteLLM):
     log_langfuse: bool = False
+
+    @staticmethod
+    def _stringify_message_content(content: Any) -> str:
+        if content is None:
+            return ""
+        if isinstance(content, str):
+            return content
+        try:
+            return json.dumps(content, ensure_ascii=True, sort_keys=True)
+        except TypeError:
+            return str(content)
+
+    @classmethod
+    def _sanitize_tool_history_for_text_only_completion(
+        cls, message_dicts: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Rewrite tool-call history into plain text for text-only follow-up turns."""
+
+        tool_calls_by_id: Dict[str, Dict[str, str]] = {}
+        sanitized_messages: List[Dict[str, Any]] = []
+
+        for message in message_dicts:
+            role = message.get("role")
+
+            if role == "assistant" and message.get("tool_calls"):
+                content_parts: List[str] = []
+                text_content = cls._stringify_message_content(
+                    message.get("content")
+                ).strip()
+                if text_content:
+                    content_parts.append(text_content)
+
+                for tool_call in message["tool_calls"]:
+                    function = tool_call.get("function") or {}
+                    tool_name = (
+                        function.get("name")
+                        or tool_call.get("name")
+                        or "unknown_tool"
+                    )
+                    tool_args = cls._stringify_message_content(
+                        function.get("arguments", tool_call.get("args"))
+                    ).strip()
+                    tool_call_id = tool_call.get("id")
+                    if tool_call_id:
+                        tool_calls_by_id[tool_call_id] = {
+                            "name": tool_name,
+                            "arguments": tool_args,
+                        }
+
+                    if tool_args:
+                        content_parts.append(
+                            f"Tool call issued: {tool_name} with arguments {tool_args}"
+                        )
+                    else:
+                        content_parts.append(f"Tool call issued: {tool_name}")
+
+                sanitized_messages.append(
+                    {
+                        "role": "assistant",
+                        "content": "\n".join(content_parts) or "Tool call issued.",
+                    }
+                )
+                continue
+
+            if role == "assistant" and message.get("function_call"):
+                function = message["function_call"]
+                tool_name = function.get("name") or "unknown_function"
+                tool_args = cls._stringify_message_content(
+                    function.get("arguments")
+                ).strip()
+                content_parts: List[str] = []
+                text_content = cls._stringify_message_content(
+                    message.get("content")
+                ).strip()
+                if text_content:
+                    content_parts.append(text_content)
+                if tool_args:
+                    content_parts.append(
+                        f"Function call issued: {tool_name} with arguments {tool_args}"
+                    )
+                else:
+                    content_parts.append(f"Function call issued: {tool_name}")
+                sanitized_messages.append(
+                    {
+                        "role": "assistant",
+                        "content": "\n".join(content_parts),
+                    }
+                )
+                continue
+
+            if role in {"tool", "function"}:
+                tool_call_id = message.get("tool_call_id")
+                matched_call = tool_calls_by_id.get(tool_call_id, {})
+                tool_name = (
+                    message.get("name")
+                    or matched_call.get("name")
+                    or "unknown_tool"
+                )
+                tool_args = matched_call.get("arguments", "")
+                content = cls._stringify_message_content(message.get("content")).strip()
+                prefix = f"Tool result from {tool_name}"
+                if tool_args:
+                    prefix += f" with arguments {tool_args}"
+                sanitized_messages.append(
+                    {
+                        "role": "user",
+                        "content": f"{prefix}:\n{content}" if content else prefix,
+                    }
+                )
+                continue
+
+            sanitized_messages.append(dict(message))
+
+        return sanitized_messages
 
     def _create_chat_result(self, response: Mapping[str, Any]) -> ChatResult:
         res: ChatResult = super()._create_chat_result(response)
@@ -72,6 +187,17 @@ class ChatLiteLLMLC(ChatLiteLLM):
             return generate_from_stream(stream_iter)
         message_dicts, params = self._create_message_dicts(messages, stop)
         params = {**params, **kwargs}
+        if "tools" not in params and any(
+            message.get("role") in {"tool", "function"}
+            or (
+                message.get("role") == "assistant"
+                and (message.get("tool_calls") or message.get("function_call"))
+            )
+            for message in message_dicts
+        ):
+            message_dicts = self._sanitize_tool_history_for_text_only_completion(
+                message_dicts
+            )
 
         response = self.completion_with_retry(
             messages=message_dicts, run_manager=run_manager, **params

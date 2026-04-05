@@ -47,10 +47,26 @@ class PlancraftDataset(Dataset):
     ) -> Dict[str, Any]:
         return self.get_instance_eval_output(instance_output)
 
-    def get_metrics(self, eval_outputs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def get_metrics(self, eval_outputs: List[Dict[str, Any] | str]) -> Dict[str, Any]:
+        num_instances = len(eval_outputs)
+        if num_instances == 0:
+            return {
+                "avg_success": 0.0,
+                "avg_num_steps": 0.0,
+                "num_instances": 0,
+            }
+
         return {
-            "avg_success": sum(e["success"] for e in eval_outputs) / len(eval_outputs),
-            "avg_num_steps": sum(e["num_steps"] for e in eval_outputs)
-            / len(eval_outputs),
-            "num_instances": len(eval_outputs),
+            "avg_success": sum(
+                bool(e.get("success", False))
+                for e in eval_outputs
+                if isinstance(e, dict)
+            )
+            / num_instances,
+            "avg_num_steps": sum(
+                e.get("num_steps", -1) if isinstance(e, dict) else -1
+                for e in eval_outputs
+            )
+            / num_instances,
+            "num_instances": num_instances,
         }

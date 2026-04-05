@@ -143,6 +143,7 @@ class SystemMetrics:
     message_density: float = 0.0
 
     total_llm_calls: int = 0
+    total_output_tokens: int = 0
     total_tokens_used: int = 0
     total_cost_usd: float = 0.0
     avg_llm_latency_ms: float = 0.0
@@ -449,6 +450,7 @@ class MetricsCollector:
         agent.total_cost += float(cost_usd)
 
         self.system_metrics.total_llm_calls += 1
+        self.system_metrics.total_output_tokens += output_tokens
         self.system_metrics.total_tokens_used += total_tokens
         self.system_metrics.total_cost_usd += float(cost_usd)
         if not success:
@@ -584,6 +586,9 @@ class MetricsCollector:
 
         self.system_metrics.total_llm_calls = len(self.llm_log)
         self.system_metrics.total_turns = len(self.llm_log)
+        self.system_metrics.total_output_tokens = sum(
+            metric.output_tokens for metric in self.llm_log
+        )
         self.system_metrics.total_tokens_used = sum(metric.total_tokens for metric in self.llm_log)
         self.system_metrics.total_cost_usd = sum(metric.cost_usd for metric in self.llm_log)
         self.system_metrics.total_tool_calls = len(self.tool_log)
@@ -710,6 +715,7 @@ class MetricsCollector:
                 "avg_llm_latency_ms": self.system_metrics.avg_llm_latency_ms,
                 "total_llm_calls": self.system_metrics.total_llm_calls,
                 "total_tool_calls": self.system_metrics.total_tool_calls,
+                "output_tokens": self.system_metrics.total_output_tokens,
                 "total_tokens": self.system_metrics.total_tokens_used,
                 "total_cost_usd": round(self.system_metrics.total_cost_usd, 8),
                 "duplicate_work_ratio": self.system_metrics.duplicate_work_ratio,

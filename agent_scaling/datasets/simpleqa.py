@@ -107,6 +107,15 @@ class SimpleQADataset(Dataset):
 
     def get_metrics(self, eval_outputs: List[Dict[str, Any] | str]) -> Dict[str, Any]:
         num_instance = len(eval_outputs)
+        if num_instance == 0:
+            return {
+                "accuracy": 0.0,
+                "pct_incorrect": 0.0,
+                "pct_not_attempted": 0.0,
+                "avg_confidence": 0.0,
+                "num_instances": 0,
+            }
+
         return {
             "accuracy": sum(
                 e["grade"] == "CORRECT" for e in eval_outputs if isinstance(e, dict)
