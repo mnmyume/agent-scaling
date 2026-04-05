@@ -1,5 +1,10 @@
+import copy
 import json
+import logging
+import traceback
 from typing import Any, Dict, List, Mapping, Optional, cast
+
+import requests
 
 import langfuse
 from langchain_core.callbacks import CallbackManagerForLLMRun
@@ -8,6 +13,14 @@ from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.outputs import ChatResult
 from langchain_litellm.chat_models.litellm import ChatLiteLLM
 from litellm.types.utils import ModelResponse
+
+logger = logging.getLogger(__name__)
+
+
+class _HTTPResponseShim:
+    def __init__(self, status_code: int, headers: Mapping[str, Any]) -> None:
+        self.status_code = status_code
+        self.headers = headers
 
 
 class ChatLiteLLMLC(ChatLiteLLM):
@@ -127,6 +140,187 @@ class ChatLiteLLMLC(ChatLiteLLM):
 
         return sanitized_messages
 
+    @staticmethod
+    def _uses_anthropic_compatible_proxy(api_base: Optional[str]) -> bool:
+        if not api_base:
+            return False
+        lowered = api_base.lower().rstrip("/")
+        return "anthropic.com" not in lowered and "/anthropic" in lowered
+
+    @staticmethod
+    def _coerce_tool_input(raw_arguments: Any) -> Dict[str, Any]:
+        if isinstance(raw_arguments, dict):
+            return raw_arguments
+        if isinstance(raw_arguments, str):
+            try:
+                parsed = json.loads(raw_arguments)
+            except json.JSONDecodeError:
+                return {"raw_arguments": raw_arguments}
+            if isinstance(parsed, dict):
+                return parsed
+            return {"value": parsed}
+        return {}
+
+    @classmethod
+    def _normalize_anthropic_compatible_completion(
+        cls, completion_response: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        normalized = dict(completion_response)
+        content = normalized.get("content")
+        if isinstance(content, list):
+            return normalized
+
+        normalized_content: List[Dict[str, Any]] = []
+        if isinstance(content, str):
+            if content:
+                normalized_content.append({"type": "text", "text": content})
+        elif isinstance(content, dict):
+            normalized_content.append(content)
+
+        message = normalized.get("message")
+        if isinstance(message, dict) and not normalized_content:
+            message_content = message.get("content")
+            if isinstance(message_content, list):
+                normalized_content.extend(message_content)
+            elif isinstance(message_content, str) and message_content:
+                normalized_content.append({"type": "text", "text": message_content})
+
+        tool_calls = normalized.get("tool_calls")
+        if tool_calls is None and isinstance(message, dict):
+            tool_calls = message.get("tool_calls")
+
+        for idx, tool_call in enumerate(tool_calls or []):
+            function = tool_call.get("function") or {}
+            normalized_content.append(
+                {
+                    "type": "tool_use",
+                    "id": tool_call.get("id") or f"toolu_proxy_{idx}",
+                    "name": function.get("name")
+                    or tool_call.get("name")
+                    or f"tool_{idx}",
+                    "input": cls._coerce_tool_input(
+                        function.get("arguments", tool_call.get("args"))
+                    ),
+                }
+            )
+
+        normalized["content"] = normalized_content
+        if normalized.get("stop_reason") is None:
+            normalized["stop_reason"] = "tool_use" if tool_calls else "end_turn"
+        return normalized
+
+    def _should_use_anthropic_proxy_fallback(
+        self, exc: TypeError, **kwargs: Any
+    ) -> bool:
+        model = cast(str, kwargs.get("model", self.model_name or self.model))
+        api_base = cast(Optional[str], kwargs.get("api_base", self.api_base))
+        if not model.startswith("anthropic/"):
+            return False
+        if not self._uses_anthropic_compatible_proxy(api_base):
+            return False
+
+        formatted_tb = traceback.format_exc()
+        return (
+            "'NoneType' object is not iterable" in str(exc)
+            and "extract_response_content" in formatted_tb
+        )
+
+    def _anthropic_proxy_completion_fallback(self, **kwargs: Any) -> ModelResponse:
+        from litellm.llms.anthropic.chat.transformation import AnthropicConfig
+        from litellm.utils import ModelResponse as LiteLLMModelResponse
+
+        model = cast(str, kwargs.get("model", self.model_name or self.model))
+        api_base = cast(Optional[str], kwargs.get("api_base", self.api_base))
+        api_key = cast(
+            Optional[str],
+            kwargs.get("api_key") or self.api_key or self.anthropic_api_key,
+        )
+        if api_base is None or api_key is None:
+            raise ValueError(
+                "Anthropic-compatible fallback requires both api_base and api_key."
+            )
+
+        endpoint = api_base.rstrip("/")
+        if not endpoint.endswith("/v1/messages"):
+            endpoint = f"{endpoint}/v1/messages"
+
+        config = AnthropicConfig()
+        request_messages = copy.deepcopy(cast(List[Dict[str, Any]], kwargs["messages"]))
+        prefix_messages = copy.deepcopy(request_messages)
+        non_default_params = {
+            key: value
+            for key, value in kwargs.items()
+            if key
+            not in {
+                "messages",
+                "model",
+                "api_base",
+                "api_key",
+                "force_timeout",
+                "custom_llm_provider",
+                "run_manager",
+                "extra_headers",
+            }
+            and value is not None
+        }
+        optional_params = config.map_openai_params(
+            non_default_params=non_default_params,
+            optional_params={},
+            model=model,
+            drop_params=False,
+        )
+        headers = config.validate_environment(
+            api_key=api_key,
+            headers=dict(cast(Dict[str, Any], kwargs.get("extra_headers") or {})),
+            model=model,
+            messages=copy.deepcopy(request_messages),
+            optional_params=copy.deepcopy(optional_params),
+            litellm_params={},
+        )
+        request_payload = config.transform_request(
+            model=model,
+            messages=request_messages,
+            optional_params=optional_params,
+            litellm_params={},
+            headers=headers,
+        )
+
+        logger.warning(
+            "LiteLLM Anthropic parsing failed for %s via %s; retrying with a "
+            "direct anthropic-compatible fallback.",
+            model,
+            api_base,
+        )
+
+        timeout = kwargs.get("force_timeout")
+        response = requests.post(
+            endpoint,
+            headers=headers,
+            data=json.dumps(request_payload),
+            timeout=timeout,
+        )
+        response.raise_for_status()
+
+        raw_completion = response.json()
+        normalized_completion = self._normalize_anthropic_compatible_completion(
+            raw_completion
+        )
+        model_response = LiteLLMModelResponse(model=model)
+        parsed_response = config.transform_parsed_response(
+            completion_response=normalized_completion,
+            raw_response=_HTTPResponseShim(
+                status_code=response.status_code,
+                headers=dict(response.headers),
+            ),
+            model_response=model_response,
+            json_mode=optional_params.get("json_mode"),
+            prefix_prompt=config.get_prefix_prompt(messages=prefix_messages),
+        )
+        parsed_response.model = model
+        parsed_response._hidden_params["anthropic_proxy_fallback"] = True
+        parsed_response._hidden_params["raw_provider_response"] = raw_completion
+        return parsed_response
+
     def _create_chat_result(self, response: Mapping[str, Any]) -> ChatResult:
         res: ChatResult = super()._create_chat_result(response)
         if res.llm_output is None:
@@ -136,6 +330,18 @@ class ChatLiteLLMLC(ChatLiteLLM):
 
     def invoke(self, *args, **kwargs) -> AIMessage:
         return cast(AIMessage, super().invoke(*args, **kwargs))
+
+    def completion_with_retry(
+        self, run_manager: Optional[CallbackManagerForLLMRun] = None, **kwargs: Any
+    ) -> Any:
+        try:
+            return super().completion_with_retry(
+                run_manager=run_manager, **kwargs
+            )
+        except TypeError as exc:
+            if not self._should_use_anthropic_proxy_fallback(exc, **kwargs):
+                raise
+            return self._anthropic_proxy_completion_fallback(**kwargs)
 
     def _log_langfuse(
         self,
