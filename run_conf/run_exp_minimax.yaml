@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - agent: multi-agent-centralized
+  - agent: multi-agent-hybrid
   - dataset: plancraft-test
   - llm: minimax-m2-7
 

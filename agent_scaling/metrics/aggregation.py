@@ -351,6 +351,272 @@ def _group_sort_key(item: tuple[tuple[Any, ...], Dict[str, RunArtifact]]) -> tup
     )
 
 
+def _model_path_parts(model: str) -> tuple[str, str]:
+    provider, _, model_name = model.partition("/")
+    provider = provider or "unknown_provider"
+    model_name = model_name or provider
+    return provider.replace("/", "__"), model_name.replace("/", "__")
+
+
+def _completed_instance_count(artifact: RunArtifact) -> int:
+    summary_count = int(artifact.run_summary.get("instance_count") or 0)
+    return max(summary_count, len(artifact.instance_indices))
+
+
+def _run_dir_recency_key(run_dir: str) -> tuple[int, str, str, str]:
+    path = Path(run_dir)
+    if len(path.parts) >= 2:
+        date_part = path.parts[-2]
+        time_part = path.parts[-1]
+        if len(date_part) == 10 and len(time_part) == 8:
+            return (1, date_part, time_part, str(path))
+    return (0, "", "", str(path))
+
+
+def _artifact_selection_key(artifact: RunArtifact) -> tuple[int, tuple[int, str, str, str]]:
+    return (
+        _completed_instance_count(artifact),
+        _run_dir_recency_key(artifact.run_dir),
+    )
+
+
+def _select_best_run_artifact(artifacts: List[RunArtifact]) -> Optional[RunArtifact]:
+    if not artifacts:
+        return None
+    return max(artifacts, key=_artifact_selection_key)
+
+
+def _instance_metrics_by_index(artifact: RunArtifact) -> Dict[int, Dict[str, Any]]:
+    indexed: Dict[int, Dict[str, Any]] = {}
+    for metrics in artifact.instance_runtime_metrics:
+        raw_idx = metrics.get("run_metadata", {}).get("instance_idx")
+        if raw_idx is None:
+            continue
+        indexed[int(raw_idx)] = metrics
+    return indexed
+
+
+def _aggregate_artifact_subset(
+    artifact: RunArtifact, instance_indices: List[int]
+) -> Dict[str, Any]:
+    indexed_metrics = _instance_metrics_by_index(artifact)
+    subset_metrics = [
+        indexed_metrics[idx] for idx in instance_indices if idx in indexed_metrics
+    ]
+    return aggregate_instance_runtime_metrics(
+        subset_metrics,
+        dataset_id=artifact.dataset_id,
+        architecture=artifact.architecture,
+        model=artifact.model,
+        token_budget=artifact.token_budget,
+        run_dir=artifact.run_dir,
+    )
+
+
+def _build_paired_metrics_entry(
+    artifact: RunArtifact,
+    baseline: RunArtifact,
+    artifact_summary: Dict[str, Any],
+    baseline_summary: Dict[str, Any],
+    paired_instance_indices: List[int],
+) -> Dict[str, Any]:
+    success_rate_mas = artifact_summary.get("success_rate")
+    success_rate_sas = baseline_summary.get("success_rate")
+    return {
+        "dataset_id": artifact.dataset_id,
+        "model": artifact.model,
+        "architecture": artifact.architecture,
+        "token_budget": artifact.token_budget,
+        "paired_instance_indices": paired_instance_indices,
+        "paired_instance_count": len(paired_instance_indices),
+        "run_dir": artifact.run_dir,
+        "baseline_run_dir": baseline.run_dir,
+        "selected_run_instance_count": _completed_instance_count(artifact),
+        "baseline_run_instance_count": _completed_instance_count(baseline),
+        "turns_T": artifact_summary.get("avg_turns"),
+        "baseline_turns_T_sas": baseline_summary.get("avg_turns"),
+        "success_rate_S": success_rate_mas,
+        "baseline_success_rate_sas": success_rate_sas,
+        "communication_overhead_percent_O": compute_communication_overhead(
+            float(artifact_summary.get("avg_turns") or 0),
+            float(baseline_summary.get("avg_turns") or 0),
+        ),
+        "message_density_c": compute_message_density(
+            float(artifact_summary.get("total_messages") or 0),
+            float(artifact_summary.get("total_turns") or 0),
+        ),
+        "coordination_efficiency_Ec": (
+            compute_coordination_efficiency(
+                float(success_rate_mas),
+                float(artifact_summary.get("avg_turns") or 0),
+                float(baseline_summary.get("avg_turns") or 0),
+            )
+            if success_rate_mas is not None
+            else None
+        ),
+        "success_per_1k_tokens": artifact_summary.get("success_per_1k_tokens"),
+        "redundancy_R": None,
+        "redundancy_proxy_bow_cosine": artifact_summary.get(
+            "redundancy_proxy_bow_cosine"
+        ),
+        "error_amplification_A_e": None,
+        "failure_amplification_proxy": (
+            compute_failure_amplification_proxy(
+                float(success_rate_mas),
+                float(success_rate_sas),
+            )
+            if success_rate_mas is not None and success_rate_sas is not None
+            else None
+        ),
+        "support": {
+            "communication_overhead_percent_O": "exact",
+            "message_density_c": "exact",
+            "coordination_efficiency_Ec": "exact",
+            "success_per_1k_tokens": "exact",
+            "redundancy_R": "deferred",
+            "redundancy_proxy_bow_cosine": "proxy",
+            "error_amplification_A_e": "deferred",
+            "failure_amplification_proxy": "proxy",
+        },
+    }
+
+
+def _dataset_root_from_run_dir(run_dir: str, dataset_id: str) -> Path:
+    path = Path(run_dir).resolve()
+    for candidate in (path, *path.parents):
+        if candidate.name == dataset_id:
+            return candidate
+    return path.parent
+
+
+def get_materialized_paper_metrics_output_path(summary: Dict[str, Any]) -> Path:
+    selected_runs = summary.get("selected_runs", [])
+    if not selected_runs:
+        raise ValueError("Cannot derive output path for a summary with no selected runs")
+
+    dataset_root = _dataset_root_from_run_dir(
+        str(selected_runs[0]["run_dir"]), str(summary["dataset_id"])
+    )
+    provider, model_name = _model_path_parts(str(summary["model"]))
+    token_budget = summary.get("token_budget")
+    token_budget_dir = (
+        "token_budget_none"
+        if token_budget is None
+        else f"token_budget_{int(token_budget)}"
+    )
+    return (
+        dataset_root
+        / "paper_metrics"
+        / provider
+        / model_name
+        / token_budget_dir
+        / "paper_metrics_summary.json"
+    )
+
+
+def materialize_paper_metrics(paths: List[str]) -> List[Dict[str, Any]]:
+    run_dirs = _discover_run_dirs(paths)
+    run_artifacts = [
+        artifact for artifact in (_load_run_artifact(run_dir) for run_dir in run_dirs) if artifact
+    ]
+
+    grouped: Dict[tuple[str, str, Optional[int]], List[RunArtifact]] = {}
+    for artifact in run_artifacts:
+        key = (artifact.dataset_id, artifact.model, artifact.token_budget)
+        grouped.setdefault(key, []).append(artifact)
+
+    summaries: List[Dict[str, Any]] = []
+    for key in sorted(
+        grouped, key=lambda item: (str(item[0]), str(item[1]), -1 if item[2] is None else int(item[2]))
+    ):
+        dataset_id, model, token_budget = key
+        artifacts = grouped[key]
+        artifacts_by_architecture: Dict[str, List[RunArtifact]] = {}
+        for artifact in artifacts:
+            artifacts_by_architecture.setdefault(artifact.architecture, []).append(artifact)
+
+        selected_by_architecture = {
+            architecture: selected
+            for architecture, selected in (
+                (
+                    architecture,
+                    _select_best_run_artifact(artifacts_for_architecture),
+                )
+                for architecture, artifacts_for_architecture in artifacts_by_architecture.items()
+            )
+            if selected is not None
+        }
+        completed_selected = {
+            architecture: artifact
+            for architecture, artifact in selected_by_architecture.items()
+            if _has_completed_instances(artifact)
+        }
+
+        selected_runs = []
+        for architecture in sorted(selected_by_architecture):
+            artifact = selected_by_architecture[architecture]
+            selected_runs.append(
+                {
+                    "architecture": architecture,
+                    "candidate_run_count": len(artifacts_by_architecture[architecture]),
+                    "run_dir": artifact.run_dir,
+                    "completed_instance_count": _completed_instance_count(artifact),
+                    "run_summary": artifact.run_summary,
+                }
+            )
+
+        paired_metrics: List[Dict[str, Any]] = []
+        shared_instance_indices: List[int] = []
+        baseline = completed_selected.get("single-agent")
+        if baseline is not None and len(completed_selected) > 1:
+            shared_sets = [set(artifact.instance_indices) for artifact in completed_selected.values()]
+            shared_instance_indices = sorted(set.intersection(*shared_sets)) if shared_sets else []
+            if shared_instance_indices:
+                baseline_summary = _aggregate_artifact_subset(
+                    baseline, shared_instance_indices
+                )
+                for architecture in sorted(completed_selected):
+                    if architecture == "single-agent":
+                        continue
+                    artifact = completed_selected[architecture]
+                    artifact_summary = _aggregate_artifact_subset(
+                        artifact, shared_instance_indices
+                    )
+                    paired_metrics.append(
+                        _build_paired_metrics_entry(
+                            artifact=artifact,
+                            baseline=baseline,
+                            artifact_summary=artifact_summary,
+                            baseline_summary=baseline_summary,
+                            paired_instance_indices=shared_instance_indices,
+                        )
+                    )
+
+        if not paired_metrics:
+            continue
+
+        summaries.append(
+            {
+                "dataset_id": dataset_id,
+                "model": model,
+                "token_budget": token_budget,
+                "selection_policy": (
+                    "For each architecture, select the run with the largest completed "
+                    "instance count, breaking ties by newer run directory timestamp. "
+                    "Paper metrics are then paired against the selected single-agent "
+                    "baseline on the shared completed instance indices across all "
+                    "selected completed architectures."
+                ),
+                "selected_runs": selected_runs,
+                "shared_instance_indices_all_selected": shared_instance_indices,
+                "shared_instance_count_all_selected": len(shared_instance_indices),
+                "paired_metrics": paired_metrics,
+            }
+        )
+
+    return summaries
+
+
 def aggregate_experiment_metrics(paths: List[str]) -> Dict[str, Any]:
     run_dirs = _discover_run_dirs(paths)
     run_artifacts = [

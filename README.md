@@ -168,6 +168,18 @@ uv run python run_scripts/aggregate_metrics.py exp_outputs/browsecomp_plus_sampl
 
 Paired metrics are only emitted when a compatible `single-agent` baseline exists for the same dataset, model, token budget, and completed instance subset.
 
+Materialize the latest canonical paper metrics for each dataset/model/token-budget group:
+
+```bash
+uv run python run_scripts/materialize_paper_metrics.py exp_outputs/plancraft-test
+```
+
+For the MiniMax PlanCraft runs in this repo, that saves to:
+
+```text
+exp_outputs/plancraft-test/paper_metrics/minimax/MiniMax-M2.7/token_budget_4800/paper_metrics_summary.json
+```
+
 ## Output Structure
 
 Experiment outputs are saved to `exp_outputs/{dataset_id}/{agent}/{model}/{date}/{time}/`.

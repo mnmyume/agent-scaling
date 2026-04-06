@@ -145,4 +145,5 @@ Metrics aggregation:
 ```bash
 uv run python run_scripts/aggregate_metrics.py exp_outputs/plancraft-test
 uv run python run_scripts/aggregate_metrics.py exp_outputs/browsecomp_plus_sampled_100
+uv run python run_scripts/materialize_paper_metrics.py exp_outputs/plancraft-test
 ```

@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import time
 import traceback
 from typing import Any, Dict, List, Mapping, Optional, cast
 
@@ -147,6 +148,13 @@ class ChatLiteLLMLC(ChatLiteLLM):
         lowered = api_base.lower().rstrip("/")
         return "anthropic.com" not in lowered and "/anthropic" in lowered
 
+    def _is_anthropic_proxy_request(self, **kwargs: Any) -> bool:
+        model = cast(str, kwargs.get("model", self.model_name or self.model))
+        api_base = cast(Optional[str], kwargs.get("api_base", self.api_base))
+        return model.startswith("anthropic/") and self._uses_anthropic_compatible_proxy(
+            api_base
+        )
+
     @staticmethod
     def _coerce_tool_input(raw_arguments: Any) -> Dict[str, Any]:
         if isinstance(raw_arguments, dict):
@@ -162,32 +170,110 @@ class ChatLiteLLMLC(ChatLiteLLM):
         return {}
 
     @classmethod
+    def _coerce_anthropic_content_blocks(cls, raw_content: Any) -> List[Dict[str, Any]]:
+        blocks: List[Dict[str, Any]] = []
+        if raw_content is None:
+            return blocks
+        if isinstance(raw_content, str):
+            text = raw_content.strip()
+            if text:
+                blocks.append({"type": "text", "text": raw_content})
+            return blocks
+        if isinstance(raw_content, dict):
+            if raw_content.get("type") is not None:
+                blocks.append(raw_content)
+                return blocks
+            text = raw_content.get("text")
+            if isinstance(text, str) and text:
+                blocks.append({"type": "text", "text": text})
+            return blocks
+        if isinstance(raw_content, list):
+            for item in raw_content:
+                blocks.extend(cls._coerce_anthropic_content_blocks(item))
+        return blocks
+
+    @staticmethod
+    def _normalize_anthropic_stop_reason(
+        stop_reason: Optional[str],
+        finish_reason: Optional[str],
+        has_tool_calls: bool,
+    ) -> str:
+        if stop_reason:
+            return stop_reason
+        if finish_reason == "tool_calls":
+            return "tool_use"
+        if finish_reason == "length":
+            return "max_tokens"
+        if finish_reason:
+            return finish_reason
+        return "tool_use" if has_tool_calls else "end_turn"
+
+    @staticmethod
+    def _normalize_anthropic_usage(usage: Any) -> Dict[str, Any]:
+        if not isinstance(usage, dict):
+            return {"input_tokens": 0, "output_tokens": 0}
+        if "input_tokens" in usage or "output_tokens" in usage:
+            return usage
+        return {
+            "input_tokens": usage.get("prompt_tokens", 0) or 0,
+            "output_tokens": usage.get("completion_tokens", 0) or 0,
+            "cache_creation_input_tokens": usage.get("cache_creation_input_tokens"),
+            "cache_read_input_tokens": usage.get("cache_read_input_tokens"),
+            "server_tool_use": usage.get("server_tool_use"),
+        }
+
+    @classmethod
     def _normalize_anthropic_compatible_completion(
         cls, completion_response: Dict[str, Any]
     ) -> Dict[str, Any]:
         normalized = dict(completion_response)
-        content = normalized.get("content")
-        if isinstance(content, list):
-            return normalized
-
-        normalized_content: List[Dict[str, Any]] = []
-        if isinstance(content, str):
-            if content:
-                normalized_content.append({"type": "text", "text": content})
-        elif isinstance(content, dict):
-            normalized_content.append(content)
+        normalized_content = cls._coerce_anthropic_content_blocks(
+            normalized.get("content")
+        )
 
         message = normalized.get("message")
         if isinstance(message, dict) and not normalized_content:
-            message_content = message.get("content")
-            if isinstance(message_content, list):
-                normalized_content.extend(message_content)
-            elif isinstance(message_content, str) and message_content:
-                normalized_content.append({"type": "text", "text": message_content})
+            normalized_content.extend(
+                cls._coerce_anthropic_content_blocks(message.get("content"))
+            )
+            if not normalized_content:
+                normalized_content.extend(
+                    cls._coerce_anthropic_content_blocks(message.get("text"))
+                )
+
+        choices = normalized.get("choices")
+        first_choice = choices[0] if isinstance(choices, list) and choices else None
+        choice_message = (
+            first_choice.get("message")
+            if isinstance(first_choice, dict) and isinstance(first_choice.get("message"), dict)
+            else None
+        )
+        if choice_message and not normalized_content:
+            normalized_content.extend(
+                cls._coerce_anthropic_content_blocks(choice_message.get("content"))
+            )
+            if not normalized_content:
+                normalized_content.extend(
+                    cls._coerce_anthropic_content_blocks(choice_message.get("text"))
+                )
+        if isinstance(first_choice, dict) and not normalized_content:
+            normalized_content.extend(
+                cls._coerce_anthropic_content_blocks(first_choice.get("text"))
+            )
+        if not normalized_content:
+            normalized_content.extend(
+                cls._coerce_anthropic_content_blocks(normalized.get("output_text"))
+            )
+        if not normalized_content:
+            normalized_content.extend(
+                cls._coerce_anthropic_content_blocks(normalized.get("text"))
+            )
 
         tool_calls = normalized.get("tool_calls")
         if tool_calls is None and isinstance(message, dict):
             tool_calls = message.get("tool_calls")
+        if tool_calls is None and isinstance(choice_message, dict):
+            tool_calls = choice_message.get("tool_calls")
 
         for idx, tool_call in enumerate(tool_calls or []):
             function = tool_call.get("function") or {}
@@ -205,24 +291,44 @@ class ChatLiteLLMLC(ChatLiteLLM):
             )
 
         normalized["content"] = normalized_content
-        if normalized.get("stop_reason") is None:
-            normalized["stop_reason"] = "tool_use" if tool_calls else "end_turn"
+        normalized["usage"] = cls._normalize_anthropic_usage(normalized.get("usage"))
+        normalized["stop_reason"] = cls._normalize_anthropic_stop_reason(
+            cast(Optional[str], normalized.get("stop_reason")),
+            cast(
+                Optional[str],
+                first_choice.get("finish_reason") if isinstance(first_choice, dict) else None,
+            ),
+            bool(tool_calls),
+        )
         return normalized
 
     def _should_use_anthropic_proxy_fallback(
-        self, exc: TypeError, **kwargs: Any
+        self, exc: BaseException, **kwargs: Any
     ) -> bool:
-        model = cast(str, kwargs.get("model", self.model_name or self.model))
-        api_base = cast(Optional[str], kwargs.get("api_base", self.api_base))
-        if not model.startswith("anthropic/"):
+        if kwargs.get("stream"):
             return False
-        if not self._uses_anthropic_compatible_proxy(api_base):
+        if not self._is_anthropic_proxy_request(**kwargs):
             return False
 
         formatted_tb = traceback.format_exc()
-        return (
-            "'NoneType' object is not iterable" in str(exc)
-            and "extract_response_content" in formatted_tb
+        error_text = str(exc)
+        has_known_parse_signature = (
+            "'NoneType' object is not iterable" in error_text
+            or "'NoneType' object is not iterable" in formatted_tb
+        ) and (
+            "extract_response_content" in error_text
+            or "transform_parsed_response" in error_text
+            or "extract_response_content" in formatted_tb
+            or "transform_parsed_response" in formatted_tb
+        )
+
+        if has_known_parse_signature:
+            return True
+        if isinstance(exc, TypeError):
+            return True
+        return isinstance(exc, (KeyError, AttributeError)) and (
+            "extract_response_content" in formatted_tb
+            or "transform_parsed_response" in formatted_tb
         )
 
     def _anthropic_proxy_completion_fallback(self, **kwargs: Any) -> ModelResponse:
@@ -305,6 +411,7 @@ class ChatLiteLLMLC(ChatLiteLLM):
         normalized_completion = self._normalize_anthropic_compatible_completion(
             raw_completion
         )
+        normalized_completion.setdefault("model", model)
         model_response = LiteLLMModelResponse(model=model)
         parsed_response = config.transform_parsed_response(
             completion_response=normalized_completion,
@@ -321,6 +428,64 @@ class ChatLiteLLMLC(ChatLiteLLM):
         parsed_response._hidden_params["raw_provider_response"] = raw_completion
         return parsed_response
 
+    @staticmethod
+    def _resolve_retry_budget(request_retries: Any, default_retries: int) -> int:
+        if request_retries is None:
+            return max(default_retries, 0)
+        try:
+            resolved = int(request_retries)
+        except (TypeError, ValueError):
+            return max(default_retries, 0)
+        return max(resolved, 0)
+
+    @staticmethod
+    def _extract_status_code(exc: BaseException) -> Optional[int]:
+        response = getattr(exc, "response", None)
+        status_code = getattr(response, "status_code", None)
+        if isinstance(status_code, int):
+            return status_code
+        status_code = getattr(exc, "status_code", None)
+        return status_code if isinstance(status_code, int) else None
+
+    @classmethod
+    def _is_retryable_server_error(cls, exc: BaseException) -> bool:
+        status_code = cls._extract_status_code(exc)
+        if status_code is not None and status_code >= 500:
+            return True
+
+        try:
+            import litellm
+        except Exception:
+            litellm = None
+
+        if litellm is None:
+            return False
+
+        service_unavailable_error = getattr(
+            litellm, "ServiceUnavailableError", None
+        )
+        retryable_types = tuple(
+            error_type
+            for error_type in (
+                getattr(litellm, "InternalServerError", None),
+                service_unavailable_error,
+            )
+            if isinstance(error_type, type)
+        )
+        return isinstance(exc, retryable_types)
+
+    @classmethod
+    def _retry_delay_seconds(cls, exc: BaseException, retry_index: int) -> float:
+        response = getattr(exc, "response", None)
+        headers = getattr(response, "headers", None) or {}
+        retry_after = headers.get("retry-after") or headers.get("Retry-After")
+        if retry_after is not None:
+            try:
+                return min(max(float(retry_after), 0.0), 30.0)
+            except (TypeError, ValueError):
+                pass
+        return min(float(2**retry_index), 8.0)
+
     def _create_chat_result(self, response: Mapping[str, Any]) -> ChatResult:
         res: ChatResult = super()._create_chat_result(response)
         if res.llm_output is None:
@@ -334,14 +499,43 @@ class ChatLiteLLMLC(ChatLiteLLM):
     def completion_with_retry(
         self, run_manager: Optional[CallbackManagerForLLMRun] = None, **kwargs: Any
     ) -> Any:
-        try:
-            return super().completion_with_retry(
-                run_manager=run_manager, **kwargs
-            )
-        except TypeError as exc:
-            if not self._should_use_anthropic_proxy_fallback(exc, **kwargs):
-                raise
-            return self._anthropic_proxy_completion_fallback(**kwargs)
+        max_server_error_retries = self._resolve_retry_budget(
+            kwargs.get("num_retries"), self.max_retries
+        )
+        retry_count = 0
+        model = cast(str, kwargs.get("model", self.model_name or self.model))
+
+        while True:
+            try:
+                return super().completion_with_retry(
+                    run_manager=run_manager, **kwargs
+                )
+            except Exception as exc:
+                active_exc: BaseException = exc
+                if self._should_use_anthropic_proxy_fallback(exc, **kwargs):
+                    try:
+                        return self._anthropic_proxy_completion_fallback(**kwargs)
+                    except Exception as fallback_exc:
+                        active_exc = fallback_exc
+
+                if (
+                    not self._is_retryable_server_error(active_exc)
+                    or retry_count >= max_server_error_retries
+                ):
+                    if active_exc is exc:
+                        raise
+                    raise active_exc
+
+                retry_count += 1
+                delay_seconds = self._retry_delay_seconds(active_exc, retry_count)
+                logger.warning(
+                    "Retrying %s after retryable server error (%s/%s): %s",
+                    model,
+                    retry_count,
+                    max_server_error_retries,
+                    active_exc,
+                )
+                time.sleep(delay_seconds)
 
     def _log_langfuse(
         self,
