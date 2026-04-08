@@ -54,7 +54,7 @@ class DecentralizedMultiAgentSystem(BaseMultiAgentSystem):
             else:
                 peer_messages = self._build_peer_messages(round_results)
                 communication_events.extend(
-                    self._peer_events_from_messages(peer_messages, round_num)
+                    self._peer_events_from_round_results(round_results, round_num)
                 )
                 round_results = await self._run_parallel_workers(
                     workers,
@@ -99,26 +99,31 @@ class DecentralizedMultiAgentSystem(BaseMultiAgentSystem):
             peer_messages[recipient_id] = "\n".join(messages) if messages else ""
         return peer_messages
 
-    def _peer_events_from_messages(
-        self, peer_messages: Dict[str, str], round_num: int
+    def _peer_events_from_round_results(
+        self, round_results: Dict[str, Any], round_num: int
     ) -> List[CommunicationEvent]:
         events: List[CommunicationEvent] = []
         timestamp = datetime.now().isoformat()
-        for recipient_id, message in peer_messages.items():
-            if not message:
+        agent_ids = list(round_results.keys())
+        for sender_id, result in round_results.items():
+            if not result.findings:
                 continue
-            for line in message.splitlines():
-                sender_id, _, content = line.partition(": ")
-                events.append(
-                    CommunicationEvent(
-                        round_num=round_num,
-                        timestamp=timestamp,
-                        sender_id=sender_id,
-                        recipient_id=recipient_id,
-                        channel="peer",
-                        message=content,
-                    )
+            recipient_ids = [
+                recipient_id for recipient_id in agent_ids if recipient_id != sender_id
+            ]
+            if not recipient_ids:
+                continue
+            events.append(
+                CommunicationEvent(
+                    round_num=round_num,
+                    timestamp=timestamp,
+                    sender_id=sender_id,
+                    recipient_id="peer_broadcast",
+                    recipient_ids=recipient_ids,
+                    channel="peer",
+                    message=result.findings,
                 )
+            )
         return events
 
     async def _collect_final_candidates(self, workers) -> List[FinalAnswerCandidate]:

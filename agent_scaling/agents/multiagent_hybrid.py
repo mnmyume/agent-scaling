@@ -117,7 +117,7 @@ class HybridMultiAgentSystem(BaseMultiAgentSystem):
         round_num: int,
     ):
         peer_messages = self._build_limited_peer_messages(round_results)
-        peer_events = self._peer_events_from_messages(peer_messages, round_num)
+        peer_events = self._peer_events_from_round_results(round_results, round_num)
         peer_results = await self._run_parallel_workers(
             workers,
             lambda worker: worker.process_peer_message(
@@ -141,24 +141,38 @@ class HybridMultiAgentSystem(BaseMultiAgentSystem):
             peer_messages[agent_id] = "\n".join(selected_peers)
         return peer_messages
 
-    def _peer_events_from_messages(
-        self, peer_messages: Dict[str, str], round_num: int
+    def _peer_events_from_round_results(
+        self, round_results, round_num: int
     ) -> List[CommunicationEvent]:
         events: List[CommunicationEvent] = []
         timestamp = datetime.now().isoformat()
-        for recipient_id, message in peer_messages.items():
-            if not message:
+        agent_ids = list(round_results.keys())
+        if len(agent_ids) < 2:
+            return events
+
+        broadcast_recipients: Dict[str, List[str]] = {agent_id: [] for agent_id in agent_ids}
+        for index, recipient_id in enumerate(agent_ids):
+            for offset in range(1, self.peer_fanout + 1):
+                sender_id = agent_ids[(index + offset) % len(agent_ids)]
+                result = round_results.get(sender_id)
+                if result and result.findings:
+                    broadcast_recipients[sender_id].append(recipient_id)
+
+        for sender_id, result in round_results.items():
+            if not result.findings:
                 continue
-            for line in message.splitlines():
-                sender_id, _, content = line.partition(": ")
-                events.append(
-                    CommunicationEvent(
-                        round_num=round_num,
-                        timestamp=timestamp,
-                        sender_id=sender_id,
-                        recipient_id=recipient_id,
-                        channel="peer",
-                        message=content,
-                    )
+            recipient_ids = broadcast_recipients.get(sender_id, [])
+            if not recipient_ids:
+                continue
+            events.append(
+                CommunicationEvent(
+                    round_num=round_num,
+                    timestamp=timestamp,
+                    sender_id=sender_id,
+                    recipient_id="peer_broadcast",
+                    recipient_ids=recipient_ids,
+                    channel="peer",
+                    message=result.findings,
                 )
+            )
         return events

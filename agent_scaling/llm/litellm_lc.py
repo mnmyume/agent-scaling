@@ -469,6 +469,7 @@ class ChatLiteLLMLC(ChatLiteLLM):
             for error_type in (
                 getattr(litellm, "InternalServerError", None),
                 service_unavailable_error,
+                getattr(litellm, "Timeout", None),
             )
             if isinstance(error_type, type)
         )

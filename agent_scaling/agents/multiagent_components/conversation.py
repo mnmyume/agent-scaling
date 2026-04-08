@@ -54,6 +54,7 @@ class CommunicationEvent(BaseModel):
     timestamp: str
     sender_id: str
     recipient_id: str
+    recipient_ids: List[str] = Field(default_factory=list)
     channel: Literal["orchestrator", "peer", "aggregation"]
     message: str
 

@@ -82,6 +82,7 @@ class LLMConfig(BaseModel):
         model_name = provider_kwargs.pop("_model_override", self.model)
         return ChatLiteLLMLC(
             model=model_name,
+            max_retries=3,
             **self.params.model_dump(exclude={"cache"}),
             **provider_kwargs,
         )

@@ -387,9 +387,21 @@ class MetricsCollector:
             recipient_metrics.communication_received += 1
 
     def ingest_communication_event(self, event: Any) -> None:
+        recipient_ids = getattr(event, "recipient_ids", None)
+        if recipient_ids is None and isinstance(event, dict):
+            recipient_ids = event.get("recipient_ids")
+
+        recipient_id = getattr(event, "recipient_id", None)
+        if recipient_id is None and isinstance(event, dict):
+            recipient_id = event.get("recipient_id")
+
+        recipients = [str(recipient) for recipient in (recipient_ids or []) if recipient]
+        if not recipients:
+            recipients = [str(recipient_id or "unknown")]
+
         self.log_communication(
             sender=getattr(event, "sender_id", "unknown"),
-            recipients=[getattr(event, "recipient_id", "unknown")],
+            recipients=recipients,
             message_type=getattr(event, "channel", "communication"),
             content=getattr(event, "message", ""),
             round=getattr(event, "round_num", None),
