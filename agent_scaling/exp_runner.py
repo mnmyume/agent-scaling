@@ -13,7 +13,8 @@ from agent_scaling.config.run import RunConfig
 from agent_scaling.datasets import Dataset, DatasetInstance
 from agent_scaling.logger import logger
 from agent_scaling.metrics import aggregate_instance_runtime_metrics
-from agent_scaling.utils import write_json, write_yaml
+from agent_scaling.resume import get_run_instances
+from agent_scaling.utils import read_json, read_yaml, write_json, write_yaml
 from agent_scaling.utils.token_budget import TokenBudgetManager
 
 
@@ -52,55 +53,109 @@ class ExperimentRunner:
         return contextlib.nullcontext()
 
     def _get_instances(self) -> List[DatasetInstance]:
-        max_instances = 10 if self.config.debug else len(self.dataset.instances)
-        max_instances = (
-            min(max_instances, self.config.max_instances)
-            if self.config.max_instances is not None
-            else max_instances
+        return get_run_instances(
+            self.dataset,
+            debug=self.config.debug,
+            max_instances=self.config.max_instances,
+            dataset_filter=self.config.dataset.dataset_filter,
         )
 
-        if self.config.dataset.dataset_filter is not None:
-            instances = [
-                instance
-                for i, instance in enumerate(self.dataset.instances)
-                if eval(self.config.dataset.dataset_filter, {}, {"x": instance, "i": i})
-            ]
-        else:
-            instances = self.dataset.instances
-        instances = instances[:max_instances]
-        return instances
+    def _get_instance_dir(self, instance_idx: int) -> Optional[str]:
+        if self.output_dir is None:
+            return None
+        return os.path.join(self.output_dir, "instance_runs", f"{instance_idx:04d}")
+
+    def _load_saved_instance_result(
+        self, instance_dir: Optional[str]
+    ) -> Optional[ProcessedInstanceResult]:
+        if instance_dir is None:
+            return None
+
+        save_path = os.path.join(instance_dir, "instance_save.yaml")
+        if not os.path.exists(save_path):
+            return None
+
+        saved = read_yaml(save_path) or {}
+        metrics = saved.get("metrics")
+        if not isinstance(metrics, dict):
+            return None
+
+        runtime_metrics = None
+        runtime_metrics_path = os.path.join(instance_dir, "runtime_metrics.json")
+        if os.path.exists(runtime_metrics_path):
+            runtime_metrics = read_json(runtime_metrics_path)
+
+        return ProcessedInstanceResult(
+            eval_metrics=metrics,
+            runtime_metrics=runtime_metrics,
+        )
+
+    def _prepare_resume_state(
+        self, instances: List[DatasetInstance]
+    ) -> tuple[
+        List[Optional[Dict[str, Any] | str]],
+        List[Optional[Dict[str, Any]]],
+        List[tuple[int, DatasetInstance, Optional[str]]],
+    ]:
+        metrics: List[Optional[Dict[str, Any] | str]] = [None] * len(instances)
+        runtime_metrics: List[Optional[Dict[str, Any]]] = [None] * len(instances)
+        work_items: List[tuple[int, DatasetInstance, Optional[str]]] = []
+        resumed_count = 0
+
+        for i, instance in enumerate(instances):
+            instance_dir = self._get_instance_dir(i)
+            if instance_dir is not None:
+                os.makedirs(instance_dir, exist_ok=True)
+
+            saved_result = self._load_saved_instance_result(instance_dir)
+            if saved_result is not None:
+                metrics[i] = saved_result.eval_metrics
+                runtime_metrics[i] = saved_result.runtime_metrics
+                resumed_count += 1
+                continue
+
+            work_items.append((i, instance, instance_dir))
+
+        if resumed_count:
+            logger.info(
+                "Resuming {} completed instance(s) from {}; {} remaining",
+                resumed_count,
+                self.output_dir,
+                len(work_items),
+            )
+
+        return metrics, runtime_metrics, work_items
 
     def run(self):
-        metrics = []
-        runtime_metrics = []
         instances = self._get_instances()
+        metrics, runtime_metrics, work_items = self._prepare_resume_state(instances)
 
         if self.log_langfuse:
             iterator = tqdm(
-                enumerate(instances),
-                total=len(instances),
-                desc=f"Evaluating {self.dataset.dataset_id} dataset instances",
+                work_items,
+                total=len(work_items),
+                desc=(
+                    f"Evaluating {self.dataset.dataset_id} dataset instances"
+                    + (" (resume)" if work_items and len(work_items) < len(instances) else "")
+                ),
             )
         else:
-            iterator = enumerate(instances)
+            iterator = work_items
 
-        for i, instance in iterator:
+        for i, instance, instance_dir in iterator:
             if self.config.debug and i >= 10:
                 break
-            instance_dir = None
-            if self.output_dir is not None:
-                instance_dir = os.path.join(
-                    self.output_dir, "instance_runs", f"{i:04d}"
-                )
-                os.makedirs(instance_dir, exist_ok=True)
 
-            # Use the core worker function
             inst_result = self._process_single_instance(i, instance, instance_dir)
-            metrics.append(inst_result.eval_metrics)
-            if inst_result.runtime_metrics is not None:
-                runtime_metrics.append(inst_result.runtime_metrics)
+            metrics[i] = inst_result.eval_metrics
+            runtime_metrics[i] = inst_result.runtime_metrics
 
-        all_metrics = self.dataset.get_metrics(metrics)
+        final_metrics = [metric for metric in metrics if metric is not None]
+        final_runtime_metrics = [
+            metric for metric in runtime_metrics if metric is not None
+        ]
+
+        all_metrics = self.dataset.get_metrics(final_metrics)
         if self.output_dir is not None:
             write_json(
                 all_metrics,
@@ -109,7 +164,7 @@ class ExperimentRunner:
             )
             write_json(
                 aggregate_instance_runtime_metrics(
-                    runtime_metrics,
+                    final_runtime_metrics,
                     dataset_id=self.dataset.dataset_id,
                     architecture=self.config.agent.name,
                     model=self.config.llm.model,
@@ -234,39 +289,23 @@ class ExperimentRunner:
         Args:
             num_workers: Maximum number of worker processes
         """
-        # Prepare work items
         instances = self._get_instances()
-
-        work_items = []
-        for i, instance in enumerate(instances):
-            instance_dir = None
-            if self.output_dir is not None:
-                instance_dir = os.path.join(
-                    self.output_dir, "instance_runs", f"{i:04d}"
-                )
-                os.makedirs(instance_dir, exist_ok=True)
-
-            work_items.append((i, instance, instance_dir))
-
-        # Process in parallel
-        metrics: List[Dict[str, int | float] | str] = [""] * len(
-            work_items
-        )  # Pre-allocate to maintain order
-        runtime_metrics: List[Optional[Dict[str, Any]]] = [None] * len(work_items)
-
-        # Parallel processing with progress bar
+        metrics, runtime_metrics, work_items = self._prepare_resume_state(instances)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
             futures = {
                 executor.submit(
                     self._process_single_instance,
                     *work_item,
-                ): i
-                for i, work_item in enumerate(work_items)
+                ): work_item[0]
+                for work_item in work_items
             }
             with tqdm(
                 total=len(work_items),
-                desc=f"Evaluating {self.dataset.dataset_id} dataset instances (parallel)",
+                desc=(
+                    f"Evaluating {self.dataset.dataset_id} dataset instances (parallel)"
+                    + (" (resume)" if work_items and len(work_items) < len(instances) else "")
+                ),
             ) as pbar:
                 for future in concurrent.futures.as_completed(futures):
                     i = futures[future]
@@ -289,7 +328,12 @@ class ExperimentRunner:
 
                     pbar.update(1)
 
-        all_metrics = self.dataset.get_metrics(metrics)
+        final_metrics = [metric for metric in metrics if metric is not None]
+        final_runtime_metrics = [
+            metric for metric in runtime_metrics if metric is not None
+        ]
+
+        all_metrics = self.dataset.get_metrics(final_metrics)
         if self.output_dir is not None:
             write_json(
                 all_metrics,
@@ -298,11 +342,7 @@ class ExperimentRunner:
             )
             write_json(
                 aggregate_instance_runtime_metrics(
-                    [
-                        metric
-                        for metric in runtime_metrics
-                        if metric is not None
-                    ],
+                    final_runtime_metrics,
                     dataset_id=self.dataset.dataset_id,
                     architecture=self.config.agent.name,
                     model=self.config.llm.model,

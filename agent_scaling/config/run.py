@@ -107,6 +107,7 @@ class RunConfig(BaseModel):
     llm: LLMConfig
     run_name: str
     save_dir: Optional[str] = None
+    resume: bool = False
     log_langfuse: bool = True
     use_disk_cache: bool = False
     debug: bool = False
@@ -158,6 +159,7 @@ class RunConfig(BaseModel):
         }
         if self.save_dir is not None:
             ret["save_dir"] = self.save_dir
+        ret["resume"] = self.resume
         ret["run_name"] = self.run_name
         ret["num_workers"] = self.num_workers
         return ret
