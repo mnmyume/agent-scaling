@@ -13,3 +13,4 @@ from .registry import (
     register_env,
 )
 from .web_search import WebSearchEnvironment
+from .workbench import WorkbenchEnvironment

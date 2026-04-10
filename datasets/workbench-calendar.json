@@ -1,0 +1,1335 @@
+{
+  "dataset_id": "workbench-calendar",
+  "instances": [
+    {
+      "index": 0,
+      "query": "Delete my first meeting on December 13",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000256\")"
+      ],
+      "base_template": "Cancel my first meeting on {natural_language_date}",
+      "chosen_template": "Delete my first meeting on {natural_language_date}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 1,
+      "query": "Cancel my first meeting on December 13",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000256\")"
+      ],
+      "base_template": "Cancel my first meeting on {natural_language_date}",
+      "chosen_template": "Cancel my first meeting on {natural_language_date}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 2,
+      "query": "can you cancel my first meeting on December 1",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000165\")"
+      ],
+      "base_template": "Cancel my first meeting on {natural_language_date}",
+      "chosen_template": "can you cancel my first meeting on {natural_language_date}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 3,
+      "query": "can you cancel my first meeting on December 8",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000236\")"
+      ],
+      "base_template": "Cancel my first meeting on {natural_language_date}",
+      "chosen_template": "can you cancel my first meeting on {natural_language_date}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 4,
+      "query": "can you cancel my first meeting on December 6",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000045\")"
+      ],
+      "base_template": "Cancel my first meeting on {natural_language_date}",
+      "chosen_template": "can you cancel my first meeting on {natural_language_date}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 5,
+      "query": "Cancel my first meeting on December 18",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000047\")"
+      ],
+      "base_template": "Cancel my first meeting on {natural_language_date}",
+      "chosen_template": "Cancel my first meeting on {natural_language_date}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 6,
+      "query": "Delete my first meeting on December 6",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000045\")"
+      ],
+      "base_template": "Cancel my first meeting on {natural_language_date}",
+      "chosen_template": "Delete my first meeting on {natural_language_date}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 7,
+      "query": "Delete my first meeting on December 18",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000047\")"
+      ],
+      "base_template": "Cancel my first meeting on {natural_language_date}",
+      "chosen_template": "Delete my first meeting on {natural_language_date}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 8,
+      "query": "Delete my first meeting on December 12",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000055\")"
+      ],
+      "base_template": "Cancel my first meeting on {natural_language_date}",
+      "chosen_template": "Delete my first meeting on {natural_language_date}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 9,
+      "query": "Cancel my first meeting on December 7",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000019\")"
+      ],
+      "base_template": "Cancel my first meeting on {natural_language_date}",
+      "chosen_template": "Cancel my first meeting on {natural_language_date}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 10,
+      "query": "Change the name of the last event on December 19 to casual catch-up",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000020\", field=\"event_name\", new_value=\"casual catch-up\")"
+      ],
+      "base_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "chosen_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 11,
+      "query": "Can you change the name of the last event on November 30 to brainstorming session",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000253\", field=\"event_name\", new_value=\"brainstorming session\")"
+      ],
+      "base_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "chosen_template": "Can you change the name of the last event on {natural_language_date} to {event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 12,
+      "query": "Change the name of the last event on December 4 to weekly summary",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000062\", field=\"event_name\", new_value=\"weekly summary\")"
+      ],
+      "base_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "chosen_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 13,
+      "query": "Change the name of the last event on December 12 to Machine Learning Chat",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000208\", field=\"event_name\", new_value=\"Machine Learning Chat\")"
+      ],
+      "base_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "chosen_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 14,
+      "query": "Change the name of the last event on December 5 to quarterly tech roundup",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000060\", field=\"event_name\", new_value=\"quarterly tech roundup\")"
+      ],
+      "base_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "chosen_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 15,
+      "query": "Change the name of the last event on December 4 to feedback discussion",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000062\", field=\"event_name\", new_value=\"feedback discussion\")"
+      ],
+      "base_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "chosen_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 16,
+      "query": "Change the name of the last event on December 8 to feedback discussion",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000185\", field=\"event_name\", new_value=\"feedback discussion\")"
+      ],
+      "base_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "chosen_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 17,
+      "query": "Can you change the name of the last event on December 14 to quarterly tech roundup",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000082\", field=\"event_name\", new_value=\"quarterly tech roundup\")"
+      ],
+      "base_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "chosen_template": "Can you change the name of the last event on {natural_language_date} to {event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 18,
+      "query": "Rename the last event on December 14 to Customer Insight Forum",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000082\", field=\"event_name\", new_value=\"Customer Insight Forum\")"
+      ],
+      "base_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "chosen_template": "Rename the last event on {natural_language_date} to {event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 19,
+      "query": "Change the name of the last event on December 15 to Product Launch Analysis",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000181\", field=\"event_name\", new_value=\"Product Launch Analysis\")"
+      ],
+      "base_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "chosen_template": "Change the name of the last event on {natural_language_date} to {event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 20,
+      "query": "please move my first meeting with kofi on December 4 by 1.5 hours",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000109\", field=\"event_start\", new_value=\"2023-12-04 12:00:00\")"
+      ],
+      "base_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "chosen_template": "please move my first meeting with {name} on {natural_language_date} by {duration}s",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 21,
+      "query": "Push back my first meeting with yuki on December 4 by 2 hours",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000062\", field=\"event_start\", new_value=\"2023-12-04 16:30:00\")"
+      ],
+      "base_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "chosen_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 22,
+      "query": "Delay my first meeting with yuki on December 4 by 30 minutes",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000062\", field=\"event_start\", new_value=\"2023-12-04 15:00:00\")"
+      ],
+      "base_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "chosen_template": "Delay my first meeting with {name} on {natural_language_date} by {duration}s",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 23,
+      "query": "Delay my first meeting with nia on December 19 by 1.5 hours",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000020\", field=\"event_start\", new_value=\"2023-12-19 15:30:00\")"
+      ],
+      "base_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "chosen_template": "Delay my first meeting with {name} on {natural_language_date} by {duration}s",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 24,
+      "query": "please move my first meeting with nadia on December 11 by 1.5 hours",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000161\", field=\"event_start\", new_value=\"2023-12-11 15:00:00\")"
+      ],
+      "base_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "chosen_template": "please move my first meeting with {name} on {natural_language_date} by {duration}s",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 25,
+      "query": "please move my first meeting with dmitri on December 18 by 2 hours",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000047\", field=\"event_start\", new_value=\"2023-12-18 15:30:00\")"
+      ],
+      "base_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "chosen_template": "please move my first meeting with {name} on {natural_language_date} by {duration}s",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 26,
+      "query": "please move my first meeting with dmitri on December 18 by 30 minutes",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000047\", field=\"event_start\", new_value=\"2023-12-18 14:00:00\")"
+      ],
+      "base_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "chosen_template": "please move my first meeting with {name} on {natural_language_date} by {duration}s",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 27,
+      "query": "please move my first meeting with amir on December 20 by 30 minutes",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000077\", field=\"event_start\", new_value=\"2023-12-20 10:30:00\")"
+      ],
+      "base_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "chosen_template": "please move my first meeting with {name} on {natural_language_date} by {duration}s",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 28,
+      "query": "Push back my first meeting with nia on December 12 by 1.5 hours",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000208\", field=\"event_start\", new_value=\"2023-12-12 16:00:00\")"
+      ],
+      "base_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "chosen_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 29,
+      "query": "Push back my first meeting with dmitri on December 18 by 1 hours",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000047\", field=\"event_start\", new_value=\"2023-12-18 14:30:00\")"
+      ],
+      "base_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "chosen_template": "Push back my first meeting with {name} on {natural_language_date} by {duration}s",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 30,
+      "query": "Can you cancel the next Year-End Performance Assessment meeting",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000091\")"
+      ],
+      "base_template": "Cancel the next {event_name} meeting",
+      "chosen_template": "Can you cancel the next {event_name} meeting",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 31,
+      "query": "Can you cancel the next annual summary meeting",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000096\")"
+      ],
+      "base_template": "Cancel the next {event_name} meeting",
+      "chosen_template": "Can you cancel the next {event_name} meeting",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 32,
+      "query": "Can you cancel the next Corporate Social Responsibility Initiative meeting",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000165\")"
+      ],
+      "base_template": "Cancel the next {event_name} meeting",
+      "chosen_template": "Can you cancel the next {event_name} meeting",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 33,
+      "query": "Can you cancel the next project checkpoint meeting",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000237\")"
+      ],
+      "base_template": "Cancel the next {event_name} meeting",
+      "chosen_template": "Can you cancel the next {event_name} meeting",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 34,
+      "query": "Can you cancel the next IT Systems Update Briefing meeting",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000213\")"
+      ],
+      "base_template": "Cancel the next {event_name} meeting",
+      "chosen_template": "Can you cancel the next {event_name} meeting",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 35,
+      "query": "Delete the next Health & Wellness Expo meeting",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000082\")"
+      ],
+      "base_template": "Cancel the next {event_name} meeting",
+      "chosen_template": "Delete the next {event_name} meeting",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 36,
+      "query": "Delete the next Board of Directors Conclave meeting",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000170\")"
+      ],
+      "base_template": "Cancel the next {event_name} meeting",
+      "chosen_template": "Delete the next {event_name} meeting",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 37,
+      "query": "Delete the next Annual Budget Planning Session meeting",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000200\")"
+      ],
+      "base_template": "Cancel the next {event_name} meeting",
+      "chosen_template": "Delete the next {event_name} meeting",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 38,
+      "query": "Cancel the next Quarterly Sales Review meeting",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000121\")"
+      ],
+      "base_template": "Cancel the next {event_name} meeting",
+      "chosen_template": "Cancel the next {event_name} meeting",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 39,
+      "query": "Cancel the next team evaluation meeting",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000047\")"
+      ],
+      "base_template": "Cancel the next {event_name} meeting",
+      "chosen_template": "Cancel the next {event_name} meeting",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 40,
+      "query": "can you rename the next process review meeting to Customer Insight Forum",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000137\", field=\"event_name\", new_value=\"Customer Insight Forum\")"
+      ],
+      "base_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "chosen_template": "can you rename the next {event_name} meeting to {new_event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 41,
+      "query": "Rename the next team evaluation meeting to Customer Insight Forum",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000047\", field=\"event_name\", new_value=\"Customer Insight Forum\")"
+      ],
+      "base_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "chosen_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 42,
+      "query": "can you rename the next sync up meeting to daily stand-up",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000016\", field=\"event_name\", new_value=\"daily stand-up\")"
+      ],
+      "base_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "chosen_template": "can you rename the next {event_name} meeting to {new_event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 43,
+      "query": "Rename the next Project Initiation Meeting meeting to Product Launch Analysis",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000060\", field=\"event_name\", new_value=\"Product Launch Analysis\")"
+      ],
+      "base_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "chosen_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 44,
+      "query": "Change the name of the next daily stand-up meeting to Data Security and Compliance Training",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000086\", field=\"event_name\", new_value=\"Data Security and Compliance Training\")"
+      ],
+      "base_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "chosen_template": "Change the name of the next {event_name} meeting to {new_event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 45,
+      "query": "Rename the next daily stand-up meeting to Diversity & Inclusion Workshop",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000086\", field=\"event_name\", new_value=\"Diversity & Inclusion Workshop\")"
+      ],
+      "base_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "chosen_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 46,
+      "query": "Change the name of the next brainstorming session meeting to status briefing",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000252\", field=\"event_name\", new_value=\"status briefing\")"
+      ],
+      "base_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "chosen_template": "Change the name of the next {event_name} meeting to {new_event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 47,
+      "query": "Rename the next Corporate Social Responsibility Initiative meeting to Risk Management Forum",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000165\", field=\"event_name\", new_value=\"Risk Management Forum\")"
+      ],
+      "base_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "chosen_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 48,
+      "query": "can you rename the next project checkpoint meeting to team orientation",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000237\", field=\"event_name\", new_value=\"team orientation\")"
+      ],
+      "base_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "chosen_template": "can you rename the next {event_name} meeting to {new_event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 49,
+      "query": "Change the name of the next Year-End Performance Assessment meeting to Machine Learning Chat",
+      "answer": [
+        "calendar.update_event.func(event_id=\"00000091\", field=\"event_name\", new_value=\"Machine Learning Chat\")"
+      ],
+      "base_template": "Rename the next {event_name} meeting to {new_event_name}",
+      "chosen_template": "Change the name of the next {event_name} meeting to {new_event_name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 50,
+      "query": "Cancel my next meeting with sofia",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000027\")"
+      ],
+      "base_template": "Cancel my next meeting with {name}",
+      "chosen_template": "Cancel my next meeting with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 51,
+      "query": "Cancel my next meeting with yuki",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000062\")"
+      ],
+      "base_template": "Cancel my next meeting with {name}",
+      "chosen_template": "Cancel my next meeting with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 52,
+      "query": "sofia is off sick. Can you cancel my next meeting with them?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000027\")"
+      ],
+      "base_template": "Cancel my next meeting with {name}",
+      "chosen_template": "{name} is off sick. Can you cancel my next meeting with them?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 53,
+      "query": "I need to cancel my next meeting with aisha. Can you do that for me please?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000225\")"
+      ],
+      "base_template": "Cancel my next meeting with {name}",
+      "chosen_template": "I need to cancel my next meeting with {name}. Can you do that for me please?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 54,
+      "query": "I need to cancel my next meeting with fatima. Can you do that for me please?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000200\")"
+      ],
+      "base_template": "Cancel my next meeting with {name}",
+      "chosen_template": "I need to cancel my next meeting with {name}. Can you do that for me please?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 55,
+      "query": "I need to cancel my next meeting with raj. Can you do that for me please?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000093\")"
+      ],
+      "base_template": "Cancel my next meeting with {name}",
+      "chosen_template": "I need to cancel my next meeting with {name}. Can you do that for me please?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 56,
+      "query": "Cancel my next meeting with anaya",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000152\")"
+      ],
+      "base_template": "Cancel my next meeting with {name}",
+      "chosen_template": "Cancel my next meeting with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 57,
+      "query": "Cancel my next meeting with dmitri",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000236\")"
+      ],
+      "base_template": "Cancel my next meeting with {name}",
+      "chosen_template": "Cancel my next meeting with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 58,
+      "query": "I need to cancel my next meeting with akira. Can you do that for me please?",
+      "answer": [],
+      "base_template": "Cancel my next meeting with {name}",
+      "chosen_template": "I need to cancel my next meeting with {name}. Can you do that for me please?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 59,
+      "query": "Cancel my next meeting with aisha",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000225\")"
+      ],
+      "base_template": "Cancel my next meeting with {name}",
+      "chosen_template": "Cancel my next meeting with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 60,
+      "query": "I think I might need to catch up with sofia. Can you check if I've met with them in the last 3 days? If not, schedule a 30-minute meeting for my first free slot from tomorrow",
+      "answer": [],
+      "base_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "chosen_template": "I think I might need to catch up with {name}. Can you check if I've met with them in the last {duration} days? If not, schedule a 30-minute meeting for my first free slot from tomorrow",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 61,
+      "query": "If I haven't met with aisha in the last 4 days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "answer": [
+        "calendar.create_event.func(event_name=\"catch-up\", participant_email=\"aisha.chen@atlas.com\", event_start=\"2023-12-01 13:00:00\", duration=\"30\")"
+      ],
+      "base_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "chosen_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 62,
+      "query": "If I haven't met with aisha in the last 9 days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "answer": [],
+      "base_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "chosen_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 63,
+      "query": "If I haven't met with fatima in the last 9 days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "answer": [
+        "calendar.create_event.func(event_name=\"catch-up\", participant_email=\"fatima.khan@atlas.com\", event_start=\"2023-12-01 13:00:00\", duration=\"30\")"
+      ],
+      "base_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "chosen_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 64,
+      "query": "If I haven't met with amir in the last 4 days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "answer": [
+        "calendar.create_event.func(event_name=\"catch-up\", participant_email=\"amir.ali@atlas.com\", event_start=\"2023-12-01 13:00:00\", duration=\"30\")"
+      ],
+      "base_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "chosen_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 65,
+      "query": "I think I might need to catch up with sofia. Can you check if I've met with them in the last 8 days? If not, schedule a 30-minute meeting for my first free slot from tomorrow",
+      "answer": [],
+      "base_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "chosen_template": "I think I might need to catch up with {name}. Can you check if I've met with them in the last {duration} days? If not, schedule a 30-minute meeting for my first free slot from tomorrow",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 66,
+      "query": "If I haven't met with akira in the last 7 days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "answer": [],
+      "base_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "chosen_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 67,
+      "query": "If I haven't met with santiago in the last 7 days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "answer": [
+        "calendar.create_event.func(event_name=\"catch-up\", participant_email=\"santiago.martinez@atlas.com\", event_start=\"2023-12-01 13:00:00\", duration=\"30\")"
+      ],
+      "base_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "chosen_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 68,
+      "query": "I think I might need to catch up with raj. Can you check if I've met with them in the last 5 days? If not, schedule a 30-minute meeting for my first free slot from tomorrow",
+      "answer": [],
+      "base_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "chosen_template": "I think I might need to catch up with {name}. Can you check if I've met with them in the last {duration} days? If not, schedule a 30-minute meeting for my first free slot from tomorrow",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 69,
+      "query": "have I met with carlos in the last 7 days? If not, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "answer": [
+        "calendar.create_event.func(event_name=\"catch-up\", participant_email=\"carlos.rodriguez@atlas.com\", event_start=\"2023-12-01 13:00:00\", duration=\"30\")"
+      ],
+      "base_template": "If I haven't met with {name} in the last {duration} days, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "chosen_template": "have I met with {name} in the last {duration} days? If not, schedule a 30-minute meeting called 'catch-up' for my first free slot from tomorrow",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 70,
+      "query": "Cancel my meetings on Wednesday after 11",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000038\")",
+        "calendar.delete_event.func(event_id=\"00000242\")"
+      ],
+      "base_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "chosen_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 71,
+      "query": "Delete my meetings on Friday before 12",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000165\")",
+        "calendar.delete_event.func(event_id=\"00000091\")"
+      ],
+      "base_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "chosen_template": "Delete my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 72,
+      "query": "Delete my meetings on Friday before 2",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000165\")",
+        "calendar.delete_event.func(event_id=\"00000091\")",
+        "calendar.delete_event.func(event_id=\"00000237\")",
+        "calendar.delete_event.func(event_id=\"00000093\")"
+      ],
+      "base_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "chosen_template": "Delete my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 73,
+      "query": "something came up. Can you cancel my meetings on Tuesday before 9?",
+      "answer": [],
+      "base_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "chosen_template": "something came up. Can you cancel my meetings on {next_day} {before_or_after} {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 74,
+      "query": "something came up. Can you cancel my meetings on Friday before 11:30?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000165\")",
+        "calendar.delete_event.func(event_id=\"00000091\")"
+      ],
+      "base_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "chosen_template": "something came up. Can you cancel my meetings on {next_day} {before_or_after} {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 75,
+      "query": "Cancel my meetings on Friday before 10:30",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000165\")",
+        "calendar.delete_event.func(event_id=\"00000091\")"
+      ],
+      "base_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "chosen_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 76,
+      "query": "something came up. Can you cancel my meetings on Tuesday before 2?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000287\")",
+        "calendar.delete_event.func(event_id=\"00000064\")",
+        "calendar.delete_event.func(event_id=\"00000060\")"
+      ],
+      "base_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "chosen_template": "something came up. Can you cancel my meetings on {next_day} {before_or_after} {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 77,
+      "query": "something came up. Can you cancel my meetings on Friday before 10:30?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000165\")",
+        "calendar.delete_event.func(event_id=\"00000091\")"
+      ],
+      "base_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "chosen_template": "something came up. Can you cancel my meetings on {next_day} {before_or_after} {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 78,
+      "query": "Cancel my meetings on Tuesday after 3",
+      "answer": [],
+      "base_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "chosen_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 79,
+      "query": "Delete my meetings on Wednesday after 1:30",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000242\")"
+      ],
+      "base_template": "Cancel my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "chosen_template": "Delete my meetings on {next_day} {before_or_after} {natural_language_time}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 80,
+      "query": "Cancel all future meetings with raj",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000093\")",
+        "calendar.delete_event.func(event_id=\"00000242\")",
+        "calendar.delete_event.func(event_id=\"00000012\")"
+      ],
+      "base_template": "Cancel all future meetings with {name}",
+      "chosen_template": "Cancel all future meetings with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 81,
+      "query": "carlos is leaving the company. Can you cancel all future meetings with them?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000054\")",
+        "calendar.delete_event.func(event_id=\"00000205\")"
+      ],
+      "base_template": "Cancel all future meetings with {name}",
+      "chosen_template": "{name} is leaving the company. Can you cancel all future meetings with them?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 82,
+      "query": "Cancel all future meetings with anaya",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000152\")"
+      ],
+      "base_template": "Cancel all future meetings with {name}",
+      "chosen_template": "Cancel all future meetings with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 83,
+      "query": "luis is leaving the company. Can you cancel all future meetings with them?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000070\")"
+      ],
+      "base_template": "Cancel all future meetings with {name}",
+      "chosen_template": "{name} is leaving the company. Can you cancel all future meetings with them?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 84,
+      "query": "I need to cancel all future meetings with olga. Can you do that for me please?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000165\")",
+        "calendar.delete_event.func(event_id=\"00000287\")",
+        "calendar.delete_event.func(event_id=\"00000121\")",
+        "calendar.delete_event.func(event_id=\"00000131\")"
+      ],
+      "base_template": "Cancel all future meetings with {name}",
+      "chosen_template": "I need to cancel all future meetings with {name}. Can you do that for me please?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 85,
+      "query": "Cancel all future meetings with yuki",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000062\")",
+        "calendar.delete_event.func(event_id=\"00000119\")"
+      ],
+      "base_template": "Cancel all future meetings with {name}",
+      "chosen_template": "Cancel all future meetings with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 86,
+      "query": "Cancel all future meetings with nia",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000237\")",
+        "calendar.delete_event.func(event_id=\"00000279\")",
+        "calendar.delete_event.func(event_id=\"00000208\")",
+        "calendar.delete_event.func(event_id=\"00000020\")"
+      ],
+      "base_template": "Cancel all future meetings with {name}",
+      "chosen_template": "Cancel all future meetings with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 87,
+      "query": "leila is leaving the company. Can you cancel all future meetings with them?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000091\")",
+        "calendar.delete_event.func(event_id=\"00000294\")",
+        "calendar.delete_event.func(event_id=\"00000174\")"
+      ],
+      "base_template": "Cancel all future meetings with {name}",
+      "chosen_template": "{name} is leaving the company. Can you cancel all future meetings with them?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 88,
+      "query": "kofi is leaving the company. Can you cancel all future meetings with them?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000253\")",
+        "calendar.delete_event.func(event_id=\"00000109\")",
+        "calendar.delete_event.func(event_id=\"00000086\")"
+      ],
+      "base_template": "Cancel all future meetings with {name}",
+      "chosen_template": "{name} is leaving the company. Can you cancel all future meetings with them?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 89,
+      "query": "Cancel all future meetings with amir",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000261\")",
+        "calendar.delete_event.func(event_id=\"00000137\")",
+        "calendar.delete_event.func(event_id=\"00000213\")",
+        "calendar.delete_event.func(event_id=\"00000284\")",
+        "calendar.delete_event.func(event_id=\"00000077\")",
+        "calendar.delete_event.func(event_id=\"00000171\")"
+      ],
+      "base_template": "Cancel all future meetings with {name}",
+      "chosen_template": "Cancel all future meetings with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 90,
+      "query": "Delete all the future board of directors conclave meetings",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000170\")"
+      ],
+      "base_template": "Cancel future {event_name} meetings",
+      "chosen_template": "Delete all the future {event_name} meetings",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 91,
+      "query": "Delete all the future Global Expansion Strategy Discussion meetings",
+      "answer": [],
+      "base_template": "Cancel future {event_name} meetings",
+      "chosen_template": "Delete all the future {event_name} meetings",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 92,
+      "query": "We've decided we don't need any any more risk management forum meetings. Can you cancel all future ones?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000225\")"
+      ],
+      "base_template": "Cancel future {event_name} meetings",
+      "chosen_template": "We've decided we don't need any any more {event_name} meetings. Can you cancel all future ones?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 93,
+      "query": "We've decided we don't need any any more health & wellness expo meetings. Can you cancel all future ones?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000082\")"
+      ],
+      "base_template": "Cancel future {event_name} meetings",
+      "chosen_template": "We've decided we don't need any any more {event_name} meetings. Can you cancel all future ones?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 94,
+      "query": "We've decided we don't need any any more weekly summary meetings. Can you cancel all future ones?",
+      "answer": [],
+      "base_template": "Cancel future {event_name} meetings",
+      "chosen_template": "We've decided we don't need any any more {event_name} meetings. Can you cancel all future ones?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 95,
+      "query": "We've decided we don't need any any more sync up meetings. Can you cancel all future ones?",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000016\")"
+      ],
+      "base_template": "Cancel future {event_name} meetings",
+      "chosen_template": "We've decided we don't need any any more {event_name} meetings. Can you cancel all future ones?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 96,
+      "query": "Delete all the future quarterly tech roundup meetings",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000294\")",
+        "calendar.delete_event.func(event_id=\"00000119\")"
+      ],
+      "base_template": "Cancel future {event_name} meetings",
+      "chosen_template": "Delete all the future {event_name} meetings",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 97,
+      "query": "Cancel future status briefing meetings",
+      "answer": [],
+      "base_template": "Cancel future {event_name} meetings",
+      "chosen_template": "Cancel future {event_name} meetings",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 98,
+      "query": "Delete all the future strategic planning meeting meetings",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000185\")",
+        "calendar.delete_event.func(event_id=\"00000012\")",
+        "calendar.delete_event.func(event_id=\"00000205\")"
+      ],
+      "base_template": "Cancel future {event_name} meetings",
+      "chosen_template": "Delete all the future {event_name} meetings",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 99,
+      "query": "Cancel future quarterly sales review meetings",
+      "answer": [
+        "calendar.delete_event.func(event_id=\"00000121\")"
+      ],
+      "base_template": "Cancel future {event_name} meetings",
+      "chosen_template": "Cancel future {event_name} meetings",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 100,
+      "query": "Create a 1.5 hour event called New Employee Onboarding on December 8 at 3:30 with nia",
+      "answer": [
+        "calendar.create_event.func(event_name=\"New Employee Onboarding\", participant_email=\"nia.johnson@atlas.com\", event_start=\"2023-12-08 15:30:00\", duration=\"90\")"
+      ],
+      "base_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "chosen_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 101,
+      "query": "I need to catch up with nadia. can you schedule a 1.5 hour event called Diversity & Inclusion Workshop on December 19 at 11?",
+      "answer": [
+        "calendar.create_event.func(event_name=\"Diversity & Inclusion Workshop\", participant_email=\"nadia.moreau@atlas.com\", event_start=\"2023-12-19 11:00:00\", duration=\"90\")"
+      ],
+      "base_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "chosen_template": "I need to catch up with {name}. can you schedule a {duration} event called {event_name} on {natural_language_date} at {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 102,
+      "query": "I need to catch up with nadia. can you schedule a 1.5 hour event called Global Expansion Strategy Discussion on December 13 at 12:30?",
+      "answer": [
+        "calendar.create_event.func(event_name=\"Global Expansion Strategy Discussion\", participant_email=\"nadia.moreau@atlas.com\", event_start=\"2023-12-13 12:30:00\", duration=\"90\")"
+      ],
+      "base_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "chosen_template": "I need to catch up with {name}. can you schedule a {duration} event called {event_name} on {natural_language_date} at {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 103,
+      "query": "I need to catch up with sofia. can you schedule a 1.5 hour event called quarterly tech roundup on December 5 at 11?",
+      "answer": [
+        "calendar.create_event.func(event_name=\"quarterly tech roundup\", participant_email=\"sofia.santos@atlas.com\", event_start=\"2023-12-05 11:00:00\", duration=\"90\")"
+      ],
+      "base_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "chosen_template": "I need to catch up with {name}. can you schedule a {duration} event called {event_name} on {natural_language_date} at {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 104,
+      "query": "I need to catch up with fatima. can you schedule a 2 hour event called Board of Directors Conclave on December 4 at 1:30?",
+      "answer": [
+        "calendar.create_event.func(event_name=\"Board of Directors Conclave\", participant_email=\"fatima.khan@atlas.com\", event_start=\"2023-12-04 13:30:00\", duration=\"120\")"
+      ],
+      "base_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "chosen_template": "I need to catch up with {name}. can you schedule a {duration} event called {event_name} on {natural_language_date} at {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 105,
+      "query": "I haven't met with yuki in a while. Can you schedule a 30 minute event called Digital Transformation Conference on December 20 at 10?",
+      "answer": [
+        "calendar.create_event.func(event_name=\"Digital Transformation Conference\", participant_email=\"yuki.tanaka@atlas.com\", event_start=\"2023-12-20 10:00:00\", duration=\"30\")"
+      ],
+      "base_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "chosen_template": "I haven't met with {name} in a while. Can you schedule a {duration} event called {event_name} on {natural_language_date} at {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 106,
+      "query": "I haven't met with olga in a while. Can you schedule a 2 hour event called project runway briefing on December 13 at 3:30?",
+      "answer": [
+        "calendar.create_event.func(event_name=\"project runway briefing\", participant_email=\"olga.petrova@atlas.com\", event_start=\"2023-12-13 15:30:00\", duration=\"120\")"
+      ],
+      "base_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "chosen_template": "I haven't met with {name} in a while. Can you schedule a {duration} event called {event_name} on {natural_language_date} at {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 107,
+      "query": "Create a 2 hour event called brainstorming session on December 21 at 12 with dmitri",
+      "answer": [
+        "calendar.create_event.func(event_name=\"brainstorming session\", participant_email=\"dmitri.ivanov@atlas.com\", event_start=\"2023-12-21 12:00:00\", duration=\"120\")"
+      ],
+      "base_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "chosen_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 108,
+      "query": "I haven't met with raj in a while. Can you schedule a 2 hour event called Data Security and Compliance Training on December 19 at 3?",
+      "answer": [
+        "calendar.create_event.func(event_name=\"Data Security and Compliance Training\", participant_email=\"raj.patel@atlas.com\", event_start=\"2023-12-19 15:00:00\", duration=\"120\")"
+      ],
+      "base_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "chosen_template": "I haven't met with {name} in a while. Can you schedule a {duration} event called {event_name} on {natural_language_date} at {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    },
+    {
+      "index": 109,
+      "query": "I need to catch up with leila. can you schedule a 1.5 hour event called Creative Thinking Workshop on December 1 at 1?",
+      "answer": [
+        "calendar.create_event.func(event_name=\"Creative Thinking Workshop\", participant_email=\"leila.azizi@atlas.com\", event_start=\"2023-12-01 13:00:00\", duration=\"90\")"
+      ],
+      "base_template": "Create a {duration} event called {event_name} on {natural_language_date} at {natural_language_time} with {name}",
+      "chosen_template": "I need to catch up with {name}. can you schedule a {duration} event called {event_name} on {natural_language_date} at {natural_language_time}?",
+      "domains": [
+        "calendar"
+      ]
+    }
+  ]
+}

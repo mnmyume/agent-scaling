@@ -1,0 +1,14 @@
+dataset_id: workbench-project-management
+from_langfuse: false
+local_path: datasets/workbench-project-management.json
+templates_local_path: prompts/dataset-shared/workbench.yaml
+env:
+  name: workbench
+  tools:
+    - project_management_get_task_information_by_id
+    - project_management_search_tasks
+    - project_management_create_task
+    - project_management_delete_task
+    - project_management_update_task
+    - company_directory_find_email_address
+    - done

@@ -1,0 +1,15 @@
+dataset_id: workbench-email
+from_langfuse: false
+local_path: datasets/workbench-email.json
+templates_local_path: prompts/dataset-shared/workbench.yaml
+env:
+  name: workbench
+  tools:
+    - email_get_email_information_by_id
+    - email_search_emails
+    - email_send_email
+    - email_delete_email
+    - email_forward_email
+    - email_reply_email
+    - company_directory_find_email_address
+    - done

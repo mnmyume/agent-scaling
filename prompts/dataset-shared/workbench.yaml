@@ -1,0 +1,25 @@
+task_description_template: |-
+  You are operating inside WorkBench, a workplace sandbox benchmark with tools for email, calendar, analytics, project management, CRM, and a company directory.
+  The sandbox clock is fixed at {{current_datetime}}.
+  "Today" means {{today_date}} and "tomorrow" means {{tomorrow_date}}.
+
+task_description_with_tools_template: |-
+  You are operating inside WorkBench, a workplace sandbox benchmark with tools for email, calendar, analytics, project management, CRM, and a company directory.
+  The sandbox clock is fixed at {{current_datetime}}.
+  "Today" means {{today_date}} and "tomorrow" means {{tomorrow_date}}.
+
+  Available tools:
+  {{tools_description}}
+
+task_behavior_template: |-
+  When solving the task:
+  - Use the tools to inspect the current sandbox state before making edits.
+  - Only make side-effecting changes that are directly required by the request.
+  - If the correct outcome is to make no changes, call `done()` without changing the sandbox state.
+  - After all required actions are complete, call `done()`.
+
+task_instance_template: |-
+  Request: {{query}}
+
+task_output_template: |-
+  Use the provided tools to complete the request, then call `done()`.

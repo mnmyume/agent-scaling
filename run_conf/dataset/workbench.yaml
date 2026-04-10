@@ -1,0 +1,35 @@
+dataset_id: workbench
+from_langfuse: false
+local_path: datasets/workbench.json
+templates_local_path: prompts/dataset-shared/workbench.yaml
+env:
+  name: workbench
+  tools:
+    - calendar_get_event_information_by_id
+    - calendar_search_events
+    - calendar_create_event
+    - calendar_delete_event
+    - calendar_update_event
+    - email_get_email_information_by_id
+    - email_search_emails
+    - email_send_email
+    - email_delete_email
+    - email_forward_email
+    - email_reply_email
+    - analytics_get_visitor_information_by_id
+    - analytics_create_plot
+    - analytics_total_visits_count
+    - analytics_engaged_users_count
+    - analytics_traffic_source_count
+    - analytics_get_average_session_duration
+    - project_management_get_task_information_by_id
+    - project_management_search_tasks
+    - project_management_create_task
+    - project_management_delete_task
+    - project_management_update_task
+    - customer_relationship_manager_search_customers
+    - customer_relationship_manager_update_customer
+    - customer_relationship_manager_add_customer
+    - customer_relationship_manager_delete_customer
+    - company_directory_find_email_address
+    - done

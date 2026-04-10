@@ -1,0 +1,13 @@
+dataset_id: workbench-customer-relationship-manager
+from_langfuse: false
+local_path: datasets/workbench-customer-relationship-manager.json
+templates_local_path: prompts/dataset-shared/workbench.yaml
+env:
+  name: workbench
+  tools:
+    - customer_relationship_manager_search_customers
+    - customer_relationship_manager_update_customer
+    - customer_relationship_manager_add_customer
+    - customer_relationship_manager_delete_customer
+    - company_directory_find_email_address
+    - done

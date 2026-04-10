@@ -1,0 +1,14 @@
+dataset_id: workbench-calendar
+from_langfuse: false
+local_path: datasets/workbench-calendar.json
+templates_local_path: prompts/dataset-shared/workbench.yaml
+env:
+  name: workbench
+  tools:
+    - calendar_get_event_information_by_id
+    - calendar_search_events
+    - calendar_create_event
+    - calendar_delete_event
+    - calendar_update_event
+    - company_directory_find_email_address
+    - done

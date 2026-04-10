@@ -22,3 +22,4 @@ from .registry import (
     register_dataset_instance,
 )
 from .simpleqa import SimpleQADataset, SimpleQAInstance
+from .workbench import WorkbenchDataset, WorkbenchInstance

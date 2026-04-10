@@ -1,0 +1,15 @@
+dataset_id: workbench-analytics
+from_langfuse: false
+local_path: datasets/workbench-analytics.json
+templates_local_path: prompts/dataset-shared/workbench.yaml
+env:
+  name: workbench
+  tools:
+    - analytics_get_visitor_information_by_id
+    - analytics_create_plot
+    - analytics_total_visits_count
+    - analytics_engaged_users_count
+    - analytics_traffic_source_count
+    - analytics_get_average_session_duration
+    - company_directory_find_email_address
+    - done

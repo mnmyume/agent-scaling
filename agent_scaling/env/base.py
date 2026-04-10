@@ -138,6 +138,25 @@ class AgentEnvironment:
         tool_name = tool_call["name"]
         tool_args = tool_call.get("args", {})
         try:
+            if isinstance(tool_args, dict):
+                tool = self.tools[tool_name]
+                valid_arg_names: set[str] | None = None
+                if getattr(tool, "args_schema", None) is not None:
+                    if isinstance(tool.args_schema, dict):
+                        schema_args = tool.args_schema.get("args", tool.args_schema)
+                    else:
+                        schema_args = tool.args_schema.model_json_schema().get(
+                            "properties", {}
+                        )
+                    if isinstance(schema_args, dict):
+                        valid_arg_names = set(schema_args.keys())
+                if valid_arg_names is not None:
+                    unexpected_args = sorted(set(tool_args.keys()) - valid_arg_names)
+                    if unexpected_args:
+                        unexpected = ", ".join(unexpected_args)
+                        raise ValueError(
+                            f"Unexpected argument(s) for tool {tool_name}: {unexpected}"
+                        )
             ret = self.tools[tool_name].invoke(tool_call)
         except Exception as exc:
             if self.metrics_collector is not None:

@@ -1,0 +1,1391 @@
+{
+  "dataset_id": "workbench-analytics",
+  "instances": [
+    {
+      "index": 0,
+      "query": "Can you make a bar chart of total visits since November 21?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-21\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"bar\")"
+      ],
+      "base_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "chosen_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 1,
+      "query": "Can you make a histogram chart of engaged users since September 27?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-27\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "chosen_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 2,
+      "query": "Create a bar chart of total visits since September 2",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-02\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"bar\")"
+      ],
+      "base_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "chosen_template": "Create a {plot_type} chart of {natural_language_metric} since {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 3,
+      "query": "Can you make a scatter chart of engaged users since September 7?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-07\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"scatter\")"
+      ],
+      "base_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "chosen_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 4,
+      "query": "Can you make a bar chart of engaged users since October 2?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-02\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"bar\")"
+      ],
+      "base_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "chosen_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 5,
+      "query": "Plot total visits since October 28 as a scatter chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-28\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"scatter\")"
+      ],
+      "base_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "chosen_template": "Plot {natural_language_metric} since {natural_language_date} as a {plot_type} chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 6,
+      "query": "Plot average session duration since September 29 as a line chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-29\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "chosen_template": "Plot {natural_language_metric} since {natural_language_date} as a {plot_type} chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 7,
+      "query": "Create a bar chart of engaged users since September 4",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-04\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"bar\")"
+      ],
+      "base_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "chosen_template": "Create a {plot_type} chart of {natural_language_metric} since {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 8,
+      "query": "Can you make a bar chart of total visits since September 9?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-09\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"bar\")"
+      ],
+      "base_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "chosen_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 9,
+      "query": "Plot average session duration since September 26 as a bar chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-26\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"bar\")"
+      ],
+      "base_template": "Can you make a {plot_type} chart of {natural_language_metric} since {natural_language_date}?",
+      "chosen_template": "Plot {natural_language_metric} since {natural_language_date} as a {plot_type} chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 10,
+      "query": "please plot the distribution of the total visits metric on October 10",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-10\", time_max=\"2023-10-10\", value_to_plot=\"total_visits\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "chosen_template": "please plot the distribution of the {natural_language_metric} metric on {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 11,
+      "query": "please plot the distribution of the total visits metric on October 20",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-20\", time_max=\"2023-10-20\", value_to_plot=\"total_visits\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "chosen_template": "please plot the distribution of the {natural_language_metric} metric on {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 12,
+      "query": "Can you make a histogram of total visits on September 20?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-20\", time_max=\"2023-09-20\", value_to_plot=\"total_visits\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "chosen_template": "Can you make a histogram of {natural_language_metric} on {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 13,
+      "query": "please plot the distribution of the total visits metric on September 9",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-09\", time_max=\"2023-09-09\", value_to_plot=\"total_visits\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "chosen_template": "please plot the distribution of the {natural_language_metric} metric on {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 14,
+      "query": "please plot the distribution of the total visits metric on October 17",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-17\", time_max=\"2023-10-17\", value_to_plot=\"total_visits\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "chosen_template": "please plot the distribution of the {natural_language_metric} metric on {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 15,
+      "query": "please plot the distribution of the average session duration metric on September 11",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-11\", time_max=\"2023-09-11\", value_to_plot=\"session_duration_seconds\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "chosen_template": "please plot the distribution of the {natural_language_metric} metric on {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 16,
+      "query": "please plot the distribution of the total visits metric on November 14",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-14\", time_max=\"2023-11-14\", value_to_plot=\"total_visits\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "chosen_template": "please plot the distribution of the {natural_language_metric} metric on {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 17,
+      "query": "please plot the distribution of the engaged users metric on November 15",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-15\", time_max=\"2023-11-15\", value_to_plot=\"user_engaged\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "chosen_template": "please plot the distribution of the {natural_language_metric} metric on {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 18,
+      "query": "please plot the distribution of the engaged users metric on November 29",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-29\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "chosen_template": "please plot the distribution of the {natural_language_metric} metric on {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 19,
+      "query": "Plot the distribution of total visits on October 28",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-28\", time_max=\"2023-10-28\", value_to_plot=\"total_visits\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "chosen_template": "Plot the distribution of {natural_language_metric} on {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 20,
+      "query": "Please plot for me the distribution of engaged users and total visits between November 5 and November 21",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-05\", time_max=\"2023-11-21\", value_to_plot=\"user_engaged\", plot_type=\"histogram\")",
+        "analytics.create_plot.func(time_min=\"2023-11-05\", time_max=\"2023-11-21\", value_to_plot=\"total_visits\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "chosen_template": "Please plot for me the distribution of {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 21,
+      "query": "I need a histogram of total visits and average session duration between September 29 and November 13",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-29\", time_max=\"2023-11-13\", value_to_plot=\"total_visits\", plot_type=\"histogram\")",
+        "analytics.create_plot.func(time_min=\"2023-09-29\", time_max=\"2023-11-13\", value_to_plot=\"session_duration_seconds\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "chosen_template": "I need a histogram of {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 22,
+      "query": "Can you plot the distribution of both total visits and average session duration between October 11 and November 19??",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-11\", time_max=\"2023-11-19\", value_to_plot=\"total_visits\", plot_type=\"histogram\")",
+        "analytics.create_plot.func(time_min=\"2023-10-11\", time_max=\"2023-11-19\", value_to_plot=\"session_duration_seconds\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "chosen_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 23,
+      "query": "Can you plot the distribution of both total visits and average session duration between October 12 and November 6??",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-12\", time_max=\"2023-11-06\", value_to_plot=\"total_visits\", plot_type=\"histogram\")",
+        "analytics.create_plot.func(time_min=\"2023-10-12\", time_max=\"2023-11-06\", value_to_plot=\"session_duration_seconds\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "chosen_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 24,
+      "query": "Please plot for me the distribution of engaged users and average session duration between October 14 and November 6",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-14\", time_max=\"2023-11-06\", value_to_plot=\"user_engaged\", plot_type=\"histogram\")",
+        "analytics.create_plot.func(time_min=\"2023-10-14\", time_max=\"2023-11-06\", value_to_plot=\"session_duration_seconds\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "chosen_template": "Please plot for me the distribution of {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 25,
+      "query": "Please plot for me the distribution of total visits and average session duration between November 15 and November 24",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-15\", time_max=\"2023-11-24\", value_to_plot=\"total_visits\", plot_type=\"histogram\")",
+        "analytics.create_plot.func(time_min=\"2023-11-15\", time_max=\"2023-11-24\", value_to_plot=\"session_duration_seconds\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "chosen_template": "Please plot for me the distribution of {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 26,
+      "query": "I need a histogram of average session duration and engaged users between November 3 and November 19",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-03\", time_max=\"2023-11-19\", value_to_plot=\"session_duration_seconds\", plot_type=\"histogram\")",
+        "analytics.create_plot.func(time_min=\"2023-11-03\", time_max=\"2023-11-19\", value_to_plot=\"user_engaged\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "chosen_template": "I need a histogram of {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 27,
+      "query": "Please plot for me the distribution of engaged users and total visits between September 3 and November 2",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-03\", time_max=\"2023-11-02\", value_to_plot=\"user_engaged\", plot_type=\"histogram\")",
+        "analytics.create_plot.func(time_min=\"2023-09-03\", time_max=\"2023-11-02\", value_to_plot=\"total_visits\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "chosen_template": "Please plot for me the distribution of {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 28,
+      "query": "Please plot for me the distribution of total visits and average session duration between November 24 and November 28",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-24\", time_max=\"2023-11-28\", value_to_plot=\"total_visits\", plot_type=\"histogram\")",
+        "analytics.create_plot.func(time_min=\"2023-11-24\", time_max=\"2023-11-28\", value_to_plot=\"session_duration_seconds\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "chosen_template": "Please plot for me the distribution of {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 29,
+      "query": "I need a histogram of average session duration and engaged users between October 9 and October 26",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-09\", time_max=\"2023-10-26\", value_to_plot=\"session_duration_seconds\", plot_type=\"histogram\")",
+        "analytics.create_plot.func(time_min=\"2023-10-09\", time_max=\"2023-10-26\", value_to_plot=\"user_engaged\", plot_type=\"histogram\")"
+      ],
+      "base_template": "Can you plot the distribution of both {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}??",
+      "chosen_template": "I need a histogram of {natural_language_metric} and {natural_language_metric_2} between {natural_language_date} and {natural_language_date_max}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 30,
+      "query": "was total visits less than 3 at any time since September 13? If so, please plot it as a line chart",
+      "answer": [],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "was {natural_language_metric} {more_or_less} than {threshold} at any time since {natural_language_date}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 31,
+      "query": "Can you make a line chart of engaged users since October 24 if it was less than 11 since at any time October 24?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-24\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since {natural_language_date} if it was {more_or_less} than {threshold} since at any time {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 32,
+      "query": "was total visits more than 3 at any time since October 28? If so, please plot it as a line chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-28\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "was {natural_language_metric} {more_or_less} than {threshold} at any time since {natural_language_date}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 33,
+      "query": "If average session duration was more than 2 at any time since October 29, make a line plot of it since then",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-29\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 34,
+      "query": "was engaged users less than 1 at any time since September 7? If so, please plot it as a line chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-07\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "was {natural_language_metric} {more_or_less} than {threshold} at any time since {natural_language_date}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 35,
+      "query": "was total visits more than 3 at any time since October 6? If so, please plot it as a line chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-06\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "was {natural_language_metric} {more_or_less} than {threshold} at any time since {natural_language_date}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 36,
+      "query": "was average session duration more than 19 at any time since November 5? If so, please plot it as a line chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-05\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "was {natural_language_metric} {more_or_less} than {threshold} at any time since {natural_language_date}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 37,
+      "query": "Can you make a line chart of total visits since September 24 if it was more than 21 since at any time September 24?",
+      "answer": [],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since {natural_language_date} if it was {more_or_less} than {threshold} since at any time {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 38,
+      "query": "Can you make a line chart of engaged users since October 6 if it was more than 1 since at any time October 6?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-06\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since {natural_language_date} if it was {more_or_less} than {threshold} since at any time {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 39,
+      "query": "Can you make a line chart of engaged users since September 9 if it was more than 5 since at any time September 9?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-09\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} at any time since {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since {natural_language_date} if it was {more_or_less} than {threshold} since at any time {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 40,
+      "query": "Make bar charts showing average session duration and engaged users since 2023-09-04",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-04\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-09-04\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"bar\")"
+      ],
+      "base_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "chosen_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 41,
+      "query": "can you make bar charts of average session duration and total visits since 2023-11-05?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-05\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-11-05\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"bar\")"
+      ],
+      "base_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "chosen_template": "can you make bar charts of {natural_language_metric} and {natural_language_metric_2} since {date_min}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 42,
+      "query": "I need bar charts of total visits and engaged users since 2023-11-10",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-10\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-11-10\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"bar\")"
+      ],
+      "base_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "chosen_template": "I need bar charts of {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 43,
+      "query": "Make bar charts showing engaged users and average session duration since 2023-09-24",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-24\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-09-24\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"bar\")"
+      ],
+      "base_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "chosen_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 44,
+      "query": "I need bar charts of average session duration and total visits since 2023-11-03",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-03\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-11-03\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"bar\")"
+      ],
+      "base_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "chosen_template": "I need bar charts of {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 45,
+      "query": "Make bar charts showing average session duration and total visits since 2023-11-17",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-17\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-11-17\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"bar\")"
+      ],
+      "base_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "chosen_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 46,
+      "query": "Make bar charts showing total visits and engaged users since 2023-11-17",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-17\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-11-17\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"bar\")"
+      ],
+      "base_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "chosen_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 47,
+      "query": "Make bar charts showing engaged users and average session duration since 2023-11-23",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-23\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-11-23\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"bar\")"
+      ],
+      "base_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "chosen_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 48,
+      "query": "can you make bar charts of engaged users and average session duration since 2023-11-02?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-02\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-11-02\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"bar\")"
+      ],
+      "base_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "chosen_template": "can you make bar charts of {natural_language_metric} and {natural_language_metric_2} since {date_min}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 49,
+      "query": "I need bar charts of engaged users and average session duration since 2023-10-14",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-14\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-10-14\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"bar\")"
+      ],
+      "base_template": "Make bar charts showing {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "chosen_template": "I need bar charts of {natural_language_metric} and {natural_language_metric_2} since {date_min}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 50,
+      "query": "Was total visits more than 21 at any time in the last 1 weeks? If so, please plot it as a line chart",
+      "answer": [],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "chosen_template": "Was {natural_language_metric} {more_or_less} than {threshold} at any time in the last {past_n_weeks} weeks? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 51,
+      "query": "Can you make a line chart of average session duration since the last 2 weeks if it was more than 2 at any time in the last 2 weeks?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-16\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since the last {past_n_weeks} weeks if it was {more_or_less} than {threshold} at any time in the last {past_n_weeks} weeks?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 52,
+      "query": "If engaged users was more than 11 any time in the last 1 weeks, make a line plot of it since then",
+      "answer": [],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "chosen_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 53,
+      "query": "Can you make a line chart of total visits since the last 4 weeks if it was more than 10 at any time in the last 4 weeks?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-02\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since the last {past_n_weeks} weeks if it was {more_or_less} than {threshold} at any time in the last {past_n_weeks} weeks?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 54,
+      "query": "Was total visits less than 3 at any time in the last 1 weeks? If so, please plot it as a line chart",
+      "answer": [],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "chosen_template": "Was {natural_language_metric} {more_or_less} than {threshold} at any time in the last {past_n_weeks} weeks? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 55,
+      "query": "Was total visits more than 10 at any time in the last 2 weeks? If so, please plot it as a line chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-16\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "chosen_template": "Was {natural_language_metric} {more_or_less} than {threshold} at any time in the last {past_n_weeks} weeks? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 56,
+      "query": "Was engaged users more than 11 at any time in the last 3 weeks? If so, please plot it as a line chart",
+      "answer": [],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "chosen_template": "Was {natural_language_metric} {more_or_less} than {threshold} at any time in the last {past_n_weeks} weeks? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 57,
+      "query": "Was average session duration less than 2 at any time in the last 2 weeks? If so, please plot it as a line chart",
+      "answer": [],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "chosen_template": "Was {natural_language_metric} {more_or_less} than {threshold} at any time in the last {past_n_weeks} weeks? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 58,
+      "query": "Can you make a line chart of total visits since the last 5 weeks if it was more than 21 at any time in the last 5 weeks?",
+      "answer": [],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since the last {past_n_weeks} weeks if it was {more_or_less} than {threshold} at any time in the last {past_n_weeks} weeks?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 59,
+      "query": "Can you make a line chart of engaged users since the last 4 weeks if it was less than 5 at any time in the last 4 weeks?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-02\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} was {more_or_less} than {threshold} any time in the last {past_n_weeks} weeks, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since the last {past_n_weeks} weeks if it was {more_or_less} than {threshold} at any time in the last {past_n_weeks} weeks?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 60,
+      "query": "Is engaged users more than 5% lower than September 25? If so, please plot it as a line chart",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Is {natural_language_metric} more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 61,
+      "query": "Can you make a line chart of engaged users since October 3 if it was more than 3% lower than October 3?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-03\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since {natural_language_date} if it was more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 62,
+      "query": "Is engaged users more than 5% higher than September 26? If so, please plot it as a line chart",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Is {natural_language_metric} more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 63,
+      "query": "Is total visits more than 5% lower than September 28? If so, please plot it as a line chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-28\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Is {natural_language_metric} more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 64,
+      "query": "Can you make a line chart of total visits since September 15 if it was more than 3% lower than September 15?",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since {natural_language_date} if it was more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 65,
+      "query": "If engaged users is more than 3% higher than November 18, make a line plot of it since then",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-18\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 66,
+      "query": "Is total visits more than 10% lower than October 21? If so, please plot it as a line chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-21\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Is {natural_language_metric} more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 67,
+      "query": "If engaged users is more than 10% lower than November 24, make a line plot of it since then",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 68,
+      "query": "Can you make a line chart of engaged users since October 21 if it was more than 10% higher than October 21?",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since {natural_language_date} if it was more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 69,
+      "query": "If average session duration is more than 3% lower than October 4, make a line plot of it since then",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-04\", time_max=\"2023-11-29\", value_to_plot=\"session_duration_seconds\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "chosen_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than {natural_language_date}, make a line plot of it since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 70,
+      "query": "Can you make a line chart of engaged users since Sunday if it is more than 10% higher than Sunday?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-26\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since {day_of_week} if it is more than {natural_language_growth_threshold} {higher_or_lower} than {day_of_week}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 71,
+      "query": "Is average session duration more than 5% higher than it was on Sunday? If so, please plot it as a line chart since then",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "chosen_template": "Is {natural_language_metric} more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}? If so, please plot it as a line chart since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 72,
+      "query": "Can you make a line chart of engaged users since Sunday if it is more than 5% lower than Sunday?",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since {day_of_week} if it is more than {natural_language_growth_threshold} {higher_or_lower} than {day_of_week}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 73,
+      "query": "Is total visits more than 3% higher than it was on Wednesday? If so, please plot it as a line chart since then",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "chosen_template": "Is {natural_language_metric} more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}? If so, please plot it as a line chart since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 74,
+      "query": "Is engaged users more than 2% lower than it was on Sunday? If so, please plot it as a line chart since then",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "chosen_template": "Is {natural_language_metric} more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}? If so, please plot it as a line chart since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 75,
+      "query": "Is total visits more than 2% lower than it was on Saturday? If so, please plot it as a line chart since then",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-25\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "chosen_template": "Is {natural_language_metric} more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}? If so, please plot it as a line chart since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 76,
+      "query": "Is engaged users more than 3% lower than it was on Sunday? If so, please plot it as a line chart since then",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "chosen_template": "Is {natural_language_metric} more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}? If so, please plot it as a line chart since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 77,
+      "query": "Can you make a line chart of average session duration since Wednesday if it is more than 3% higher than Wednesday?",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "chosen_template": "Can you make a line chart of {natural_language_metric} since {day_of_week} if it is more than {natural_language_growth_threshold} {higher_or_lower} than {day_of_week}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 78,
+      "query": "If average session duration is more than 10% lower than it was on Saturday, make a line plot of it since then",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "chosen_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 79,
+      "query": "Is average session duration more than 10% lower than it was on Wednesday? If so, please plot it as a line chart since then",
+      "answer": [],
+      "base_template": "If {natural_language_metric} is more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}, make a line plot of it since then",
+      "chosen_template": "Is {natural_language_metric} more than {natural_language_growth_threshold} {higher_or_lower} than it was on {day_of_week}? If so, please plot it as a line chart since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 80,
+      "query": "If average session duration on monday was more than 2% lower than it was the previous monday, make a line plot of it over that period.",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-20\", time_max=\"2023-11-27\", value_to_plot=\"session_duration_seconds\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "chosen_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 81,
+      "query": "make a line chart of engaged users over the period from friday to the previous friday if it was more than 3% higher on friday than it was the previous friday",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-17\", time_max=\"2023-11-24\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "chosen_template": "make a line chart of {natural_language_metric} over the period from {day_of_week} to the previous {day_of_week} if it was more than {natural_language_growth_threshold} {higher_or_lower} on {day_of_week} than it was the previous {day_of_week}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 82,
+      "query": "make a line chart of total visits over the period from tuesday to the previous tuesday if it was more than 2% lower on tuesday than it was the previous tuesday",
+      "answer": [],
+      "base_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "chosen_template": "make a line chart of {natural_language_metric} over the period from {day_of_week} to the previous {day_of_week} if it was more than {natural_language_growth_threshold} {higher_or_lower} on {day_of_week} than it was the previous {day_of_week}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 83,
+      "query": "Was total visits on monday more than 5% higher than it was the previous monday? If so, please plot it as a line chart",
+      "answer": [],
+      "base_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "chosen_template": "Was {natural_language_metric} on {day_of_week} more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 84,
+      "query": "If average session duration on saturday was more than 3% higher than it was the previous saturday, make a line plot of it over that period.",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-18\", time_max=\"2023-11-25\", value_to_plot=\"session_duration_seconds\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "chosen_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 85,
+      "query": "make a line chart of engaged users over the period from friday to the previous friday if it was more than 2% lower on friday than it was the previous friday",
+      "answer": [],
+      "base_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "chosen_template": "make a line chart of {natural_language_metric} over the period from {day_of_week} to the previous {day_of_week} if it was more than {natural_language_growth_threshold} {higher_or_lower} on {day_of_week} than it was the previous {day_of_week}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 86,
+      "query": "Was engaged users on monday more than 10% higher than it was the previous monday? If so, please plot it as a line chart",
+      "answer": [],
+      "base_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "chosen_template": "Was {natural_language_metric} on {day_of_week} more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 87,
+      "query": "Was average session duration on monday more than 3% lower than it was the previous monday? If so, please plot it as a line chart",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-20\", time_max=\"2023-11-27\", value_to_plot=\"session_duration_seconds\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "chosen_template": "Was {natural_language_metric} on {day_of_week} more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}? If so, please plot it as a line chart",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 88,
+      "query": "If average session duration on sunday was more than 2% lower than it was the previous sunday, make a line plot of it over that period.",
+      "answer": [],
+      "base_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "chosen_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 89,
+      "query": "If engaged users on sunday was more than 2% lower than it was the previous sunday, make a line plot of it over that period.",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-19\", time_max=\"2023-11-26\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "chosen_template": "If {natural_language_metric} on {day_of_week} was more than {natural_language_growth_threshold} {higher_or_lower} than it was the previous {day_of_week}, make a line plot of it over that period.",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 90,
+      "query": "if total visits grew by more than engaged users since Saturday, make a line plot of both since then",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-25\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"line\")",
+        "analytics.create_plot.func(time_min=\"2023-11-25\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "chosen_template": "if {natural_language_metric} grew by more than {natural_language_metric_2} since {day_of_week}, make a line plot of both since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 91,
+      "query": "if engaged users grew by more than total visits since Tuesday, make a line plot of both since then",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-28\", time_max=\"2023-11-29\", value_to_plot=\"user_engaged\", plot_type=\"line\")",
+        "analytics.create_plot.func(time_min=\"2023-11-28\", time_max=\"2023-11-29\", value_to_plot=\"total_visits\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "chosen_template": "if {natural_language_metric} grew by more than {natural_language_metric_2} since {day_of_week}, make a line plot of both since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 92,
+      "query": "Can you check the percent growth of average session duration since Sunday? If it grew by more than total visits, plot both lines since then",
+      "answer": [],
+      "base_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "chosen_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 93,
+      "query": "if average session duration grew by more than total visits since Friday, make a line plot of both since then",
+      "answer": [],
+      "base_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "chosen_template": "if {natural_language_metric} grew by more than {natural_language_metric_2} since {day_of_week}, make a line plot of both since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 94,
+      "query": "Check the percent growth of average session duration since Friday. If it grew by more than engaged users, plot both lines since then",
+      "answer": [],
+      "base_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "chosen_template": "Check the percent growth of {natural_language_metric} since {day_of_week}. If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 95,
+      "query": "Can you check the percent growth of average session duration since Monday? If it grew by more than engaged users, plot both lines since then",
+      "answer": [],
+      "base_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "chosen_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 96,
+      "query": "if engaged users grew by more than total visits since Monday, make a line plot of both since then",
+      "answer": [],
+      "base_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "chosen_template": "if {natural_language_metric} grew by more than {natural_language_metric_2} since {day_of_week}, make a line plot of both since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 97,
+      "query": "Check the percent growth of engaged users since Tuesday. If it grew by more than average session duration, plot both lines since then",
+      "answer": [],
+      "base_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "chosen_template": "Check the percent growth of {natural_language_metric} since {day_of_week}. If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 98,
+      "query": "Can you check the percent growth of average session duration since Wednesday? If it grew by more than total visits, plot both lines since then",
+      "answer": [],
+      "base_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "chosen_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 99,
+      "query": "if average session duration grew by more than total visits since Wednesday, make a line plot of both since then",
+      "answer": [],
+      "base_template": "Can you check the percent growth of {natural_language_metric} since {day_of_week}? If it grew by more than {natural_language_metric_2}, plot both lines since then",
+      "chosen_template": "if {natural_language_metric} grew by more than {natural_language_metric_2} since {day_of_week}, make a line plot of both since then",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 100,
+      "query": "Can you make a line plot of the most popular traffic source since September 28?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-28\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "chosen_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 101,
+      "query": "Can you make a line plot of the most popular traffic source since November 29?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-29\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "chosen_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 102,
+      "query": "Can you make a line plot of the most popular traffic source since November 27?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-27\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "chosen_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 103,
+      "query": "Make a line plot of the most popular traffic source since October 20",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-20\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "chosen_template": "Make a line plot of the {most_or_least} popular traffic source since {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 104,
+      "query": "Can you make a line plot of the most popular traffic source since October 15?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-15\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "chosen_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 105,
+      "query": "Can you make a line plot of the most popular traffic source since November 24?",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-24\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "chosen_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 106,
+      "query": "Make a line plot of the most popular traffic source since November 16",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-16\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "chosen_template": "Make a line plot of the {most_or_least} popular traffic source since {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 107,
+      "query": "Make a line plot of the most popular traffic source since October 13",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-13\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "chosen_template": "Make a line plot of the {most_or_least} popular traffic source since {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 108,
+      "query": "plot the most popular traffic source since September 28",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-09-28\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "chosen_template": "plot the {most_or_least} popular traffic source since {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 109,
+      "query": "plot the most popular traffic source since October 27",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-27\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"line\")"
+      ],
+      "base_template": "Can you make a line plot of the {most_or_least} popular traffic source since {natural_language_date}?",
+      "chosen_template": "plot the {most_or_least} popular traffic source since {natural_language_date}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 110,
+      "query": "Make bar charts of social media and search engine over the last 6 weeks if we got more traffic from social media than search engine",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-19\", time_max=\"2023-11-29\", value_to_plot=\"visits_social_media\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-10-19\", time_max=\"2023-11-29\", value_to_plot=\"visits_search_engine\", plot_type=\"bar\")"
+      ],
+      "base_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "chosen_template": "Make bar charts of {traffic_source_1} and {traffic_source_2} over the last {n_weeks} weeks if we got more traffic from {traffic_source_1} than {traffic_source_2}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 111,
+      "query": "did we get more traffic from referral than direct during the last 3 weeks? If so, make bar charts of both over that period",
+      "answer": [],
+      "base_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "chosen_template": "did we get more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks? If so, make bar charts of both over that period",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 112,
+      "query": "did we get more traffic from direct than social media during the last 6 weeks? If so, make bar charts of both over that period",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-19\", time_max=\"2023-11-29\", value_to_plot=\"visits_direct\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-10-19\", time_max=\"2023-11-29\", value_to_plot=\"visits_social_media\", plot_type=\"bar\")"
+      ],
+      "base_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "chosen_template": "did we get more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks? If so, make bar charts of both over that period",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 113,
+      "query": "Make bar charts of referral and social media over the last 4 weeks if we got more traffic from referral than social media",
+      "answer": [],
+      "base_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "chosen_template": "Make bar charts of {traffic_source_1} and {traffic_source_2} over the last {n_weeks} weeks if we got more traffic from {traffic_source_1} than {traffic_source_2}",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 114,
+      "query": "did we get more traffic from search engine than direct during the last 5 weeks? If so, make bar charts of both over that period",
+      "answer": [],
+      "base_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "chosen_template": "did we get more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks? If so, make bar charts of both over that period",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 115,
+      "query": "If we got more traffic from referral than social media during the last 6 weeks, make bar charts of both over that period",
+      "answer": [],
+      "base_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "chosen_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 116,
+      "query": "did we get more traffic from social media than search engine during the last 5 weeks? If so, make bar charts of both over that period",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-10-26\", time_max=\"2023-11-29\", value_to_plot=\"visits_social_media\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-10-26\", time_max=\"2023-11-29\", value_to_plot=\"visits_search_engine\", plot_type=\"bar\")"
+      ],
+      "base_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "chosen_template": "did we get more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks? If so, make bar charts of both over that period",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 117,
+      "query": "If we got more traffic from search engine than social media during the last 5 weeks, make bar charts of both over that period",
+      "answer": [],
+      "base_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "chosen_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 118,
+      "query": "If we got more traffic from referral than search engine during the last 5 weeks, make bar charts of both over that period",
+      "answer": [],
+      "base_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "chosen_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "domains": [
+        "analytics"
+      ]
+    },
+    {
+      "index": 119,
+      "query": "Make bar charts of social media and search engine over the last 4 weeks if we got more traffic from social media than search engine",
+      "answer": [
+        "analytics.create_plot.func(time_min=\"2023-11-02\", time_max=\"2023-11-29\", value_to_plot=\"visits_social_media\", plot_type=\"bar\")",
+        "analytics.create_plot.func(time_min=\"2023-11-02\", time_max=\"2023-11-29\", value_to_plot=\"visits_search_engine\", plot_type=\"bar\")"
+      ],
+      "base_template": "If we got more traffic from {traffic_source_1} than {traffic_source_2} during the last {n_weeks} weeks, make bar charts of both over that period",
+      "chosen_template": "Make bar charts of {traffic_source_1} and {traffic_source_2} over the last {n_weeks} weeks if we got more traffic from {traffic_source_1} than {traffic_source_2}",
+      "domains": [
+        "analytics"
+      ]
+    }
+  ]
+}

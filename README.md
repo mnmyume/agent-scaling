@@ -78,8 +78,15 @@ python run_scripts/run_experiment.py token_budget.total_tokens_per_instance=4800
 |---------|-------------|-------|
 | PlanCraft test subset | `plancraft-test` | Objective environment-grounded evaluation |
 | BrowseComp+ sampled subset | `browsecomp-plus` | LLM-graded via the reusable BrowseComp grader |
+| WorkBench full set | `workbench` | Deterministic state-based evaluation via tool-call replay; no LLM grader required |
+| WorkBench analytics split | `workbench-analytics` | Same deterministic WorkBench evaluator |
+| WorkBench calendar split | `workbench-calendar` | Same deterministic WorkBench evaluator |
+| WorkBench CRM split | `workbench-customer-relationship-manager` | Same deterministic WorkBench evaluator |
+| WorkBench email split | `workbench-email` | Same deterministic WorkBench evaluator |
+| WorkBench multi-domain split | `workbench-multi-domain` | Same deterministic WorkBench evaluator |
+| WorkBench project-management split | `workbench-project-management` | Same deterministic WorkBench evaluator |
 
-Finance-Agent and Workbench are intentionally deferred in this pass and are not yet wired into `run_conf/`.
+WorkBench is now wired into `run_conf/dataset/`. Unlike BrowseComp+, it does not use `eval_llm` or an LLM grader; correctness is computed by replaying the predicted tool calls against the sandbox and comparing the resulting state to the gold state.
 
 #### Supported LLMs
 
@@ -153,6 +160,7 @@ python run_scripts/run_experiment.py \
 python run_scripts/run_experiment.py agent=single-agent dataset=plancraft-test debug=true max_instances=1
 python run_scripts/run_experiment.py agent=multi-agent-centralized dataset=plancraft-test debug=true max_instances=1
 python run_scripts/run_experiment.py agent=multi-agent-independent dataset=plancraft-test debug=true max_instances=1
+python run_scripts/run_experiment.py agent=single-agent dataset=workbench-email debug=true max_instances=1
 python run_scripts/run_experiment.py agent=multi-agent-decentralized dataset=browsecomp-plus debug=true max_instances=1
 python run_scripts/run_experiment.py agent=multi-agent-hybrid dataset=browsecomp-plus debug=true max_instances=1
 ```
