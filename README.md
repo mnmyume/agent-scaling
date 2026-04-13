@@ -67,9 +67,9 @@ python run_scripts/run_experiment.py token_budget.total_tokens_per_instance=4800
 | Architecture | Config Name | Description |
 |-------------|-------------|-------------|
 | Single-Agent | `single-agent` | Single LLM agent with tool use |
-| Centralized MAS | `multi-agent-centralized` | Lead-agent orchestration with worker agents |
 | Independent MAS | `multi-agent-independent` | Parallel workers with no live coordination |
 | Decentralized MAS | `multi-agent-decentralized` | Peer-to-peer coordination without a lead agent |
+| Centralized MAS | `multi-agent-centralized` | Lead-agent orchestration with worker agents |
 | Hybrid MAS | `multi-agent-hybrid` | Lead-agent orchestration plus bounded peer exchange |
 
 ### Implemented Dataset Selectors
@@ -165,28 +165,111 @@ python run_scripts/run_experiment.py agent=multi-agent-decentralized dataset=bro
 python run_scripts/run_experiment.py agent=multi-agent-hybrid dataset=browsecomp-plus debug=true max_instances=1
 ```
 
-### Metrics Aggregation
+### Paper Metrics Calculator
 
-Aggregate completed experiment folders into paper-style metrics:
+Use the paper metrics calculator after you have finished running the relevant
+architectures for a dataset/model pair:
+
+```bash
+uv run python run_scripts/materialize_paper_metrics.py exp_outputs/plancraft-test
+uv run python run_scripts/materialize_paper_metrics.py exp_outputs/workbench
+```
+
+The script does not take a `--model` flag. It infers the model from the run
+directories you pass in:
+
+- Pass a dataset root such as `exp_outputs/plancraft-test` to process every
+  discovered model under that dataset.
+- Pass only model-specific directories to restrict calculation to one model.
+
+Example for only `minimax/MiniMax-M2.7`:
+
+```bash
+uv run python run_scripts/materialize_paper_metrics.py \
+  exp_outputs/plancraft-test/*/minimax/MiniMax-M2.7
+```
+
+What it does:
+
+- Scans the provided experiment directory recursively for completed runs.
+- Groups runs by `(dataset_id, model, token_budget)`.
+- For each architecture in that group, selects the run with the largest completed
+  instance count, breaking ties by newer run timestamp.
+- Recomputes paired paper metrics on the shared completed instance set across the
+  selected architectures.
+- Writes the canonical result under `exp_outputs/<dataset>/paper_metrics/...`.
+
+The calculator only writes a summary when a pairable `single-agent` baseline
+exists and the selected runs share a completed instance subset.
+
+Output layout:
+
+```text
+exp_outputs/<dataset>/paper_metrics/<provider>/<model>/token_budget_<budget>/paper_metrics_summary.json
+```
+
+Example:
+
+```text
+exp_outputs/plancraft-test/paper_metrics/minimax/MiniMax-M2.7/token_budget_4800/paper_metrics_summary.json
+```
+
+If you want the raw aggregation across every discovered run history instead of
+the single canonical paper-metrics output, use:
 
 ```bash
 uv run python run_scripts/aggregate_metrics.py exp_outputs/plancraft-test
 uv run python run_scripts/aggregate_metrics.py exp_outputs/browsecomp_plus_sampled_100
 ```
 
-Paired metrics are only emitted when a compatible `single-agent` baseline exists for the same dataset, model, token budget, and completed instance subset.
+That script keeps all discovered runs in one summary and only emits paired
+metrics when `single-agent` and MAS runs have exactly matching completed
+instance indices.
 
-Materialize the latest canonical paper metrics for each dataset/model/token-budget group:
+### Scaling Principle Predictor
+
+Use the scaling-principle predictor after `paper_metrics_summary.json` files
+have already been materialized:
 
 ```bash
-uv run python run_scripts/materialize_paper_metrics.py exp_outputs/plancraft-test
+uv run python run_scripts/predict_scaling_principle.py
 ```
 
-For the MiniMax PlanCraft runs in this repo, that saves to:
+By default, the script:
 
-```text
-exp_outputs/plancraft-test/paper_metrics/minimax/MiniMax-M2.7/token_budget_4800/paper_metrics_summary.json
+- Recursively searches `exp_outputs/` for `paper_metrics_summary.json`.
+- Filters to `model=minimax/MiniMax-M2.7` and `token_budget=4800`.
+- Reads the paper-style inputs from each summary's `paired_metrics` block.
+- Applies the hardcoded MiniMax scaling inputs from the script:
+  `I=55.0`, `I_mean=56.9`, `T={'workbench': 26, 'plancraft-test': 1}`, and
+  `n_a={'single-agent': 1, 'multi-agent-*': 3}`.
+- Builds the regression features, including the required `log1p`
+  transformations, Table 4 interaction terms, and dataset-wide z-score
+  standardization across the parsed rows.
+- Writes the comparison CSV to `predict_results/prediction_comparison.csv`.
+
+Example with explicit arguments:
+
+```bash
+uv run python run_scripts/predict_scaling_principle.py \
+  --exp-root exp_outputs \
+  --model minimax/MiniMax-M2.7 \
+  --token-budget 4800 \
+  --output-dir predict_results
 ```
+
+Useful options:
+
+- `--include-single-agent`: also add a synthetic `single-agent` baseline row
+  from `selected_runs`. By default, the script only scores the architectures
+  present in `paired_metrics`.
+- `--output-dir <dir>`: choose a different output directory.
+- `--model <model>` and `--token-budget <budget>`: score a different model or
+  token-budget slice, as long as the matching paper-metrics summaries exist.
+
+The script prints the Mean Absolute Error (MAE) to the console and displays a
+table sorted by predicted success rate, with `predicted_success_rate`,
+`actual_success_rate`, and `absolute_error` for each architecture.
 
 ## Output Structure
 

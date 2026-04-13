@@ -1,0 +1,9 @@
+dataset_id,architecture,row_source,predicted_success_rate_raw,predicted_success_rate,prediction_was_clipped,actual_success_rate,absolute_error,predicted_rank_within_dataset,actual_rank_within_dataset
+plancraft-test,multi-agent-decentralized,paired_metrics,0.2442598816267209,0.2442598816267209,False,0.51,0.2657401183732791,1,1
+plancraft-test,multi-agent-independent,paired_metrics,0.17515053933403746,0.17515053933403746,False,0.17,0.005150539334037446,2,4
+plancraft-test,multi-agent-centralized,paired_metrics,0.12343100273510815,0.12343100273510815,False,0.36,0.23656899726489183,3,3
+plancraft-test,multi-agent-hybrid,paired_metrics,0.08631536682268912,0.08631536682268912,False,0.37,0.28368463317731085,4,2
+workbench,multi-agent-decentralized,paired_metrics,0.8876901110571314,0.8876901110571314,False,0.26,0.6276901110571314,1,2
+workbench,multi-agent-centralized,paired_metrics,0.7455511151426992,0.7455511151426992,False,0.3,0.44555111514269924,2,1
+workbench,multi-agent-hybrid,paired_metrics,0.6952468061704185,0.6952468061704185,False,0.3,0.39524680617041846,3,1
+workbench,multi-agent-independent,paired_metrics,0.6663551771111944,0.6663551771111944,False,0.2,0.4663551771111944,4,3
