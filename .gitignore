@@ -63,3 +63,4 @@ datasets/*.json
 # Allow key documentation files despite *.md exclusion
 !REPRODUCTION.md
 !DATA_AVAILABILITY.md
+.DS_Store

@@ -1,23 +1,24 @@
 defaults:
   - _self_
   # - agent: single-agent
-  - agent: multi-agent-centralized
-  # - agent: multi-agent-decentralized
+  # - agent: multi-agent-independent
+  - agent: multi-agent-decentralized
+  # - agent: multi-agent-centralized
   # - agent: multi-agent-hybrid
 
   - dataset: plancraft-test
   # - dataset: browsecomp-plus
 
 llm:
-  model: gemini/gemini-2.0-flash  #gpt-4o-mini
+  model: anthropic/MiniMax-M2.7
   params:
     temperature: 0.0
 
 log_langfuse: false
-use_disk_cache: true
+use_disk_cache: false
 num_workers: 1 
-debug: true
-max_instances: 3
+debug: false
+max_instances: 100
 run_name: ${agent.name}_${llm.model}_${now:%Y-%m-%d}_${now:%H-%M-%S}
 
 hydra:
