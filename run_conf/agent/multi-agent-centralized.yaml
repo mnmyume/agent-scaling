@@ -7,9 +7,9 @@ prompts:
 
 # Centralized multi-agent parameters
 n_base_agents: 3
-min_iterations_per_agent: 3
-max_iterations_per_agent: 25
-max_rounds: 10
+min_iterations_per_agent: 1
+max_iterations_per_agent: 3   # Paper Appendix E.2: 3 iterations per agent per round; codebase default: 25
+max_rounds: 5                 # Paper Appendix E.2: maximum 5 orchestration rounds; codebase default: 10
 task_blurb: "task coordinator"
 
 # Execution control parameters

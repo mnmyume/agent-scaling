@@ -2,3 +2,5 @@ name: single-agent
 prompts:
   main:
     local_path: prompts/single-agent/single-agent.yaml
+
+max_steps: 10  # Paper Appendix E.2: single agents use maximum 10 iterations per instance

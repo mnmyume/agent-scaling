@@ -5,6 +5,6 @@ prompts:
 
 # Independent multi-agent parameters (no coordination)
 n_base_agents: 3
-min_iterations_per_agent: 3
-max_iterations_per_agent: 25
+min_iterations_per_agent: 1
+max_iterations_per_agent: 3   # Paper Appendix E.2: ~3 per agent (equal total budget to SAS 10 steps / 3 agents); codebase default: 25
 task_blurb: "independent worker"

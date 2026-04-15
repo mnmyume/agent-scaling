@@ -7,7 +7,9 @@ prompts:
 
 # Hybrid multi-agent parameters
 n_base_agents: 3
-min_iterations_per_agent: 3
-max_iterations_per_agent: 25
+min_iterations_per_agent: 1
+max_iterations_per_agent: 3   # Paper Appendix E.2: 3 iterations per agent per round (same as centralized); codebase default: 25
+max_rounds: 5                 # Paper does not state explicitly; inferred from centralized structure (orchestration rounds only); codebase default: 10
+                              # Note: peer communication is a separate hardcoded +1 round in multiagent_hybrid.py, not controlled here
 enable_peer_communication: true  # Enable agent-driven peer communication
 task_blurb: "hybrid coordinator" 

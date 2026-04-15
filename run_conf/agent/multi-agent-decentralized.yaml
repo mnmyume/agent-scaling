@@ -5,8 +5,8 @@ prompts:
 
 # Decentralized multi-agent parameters
 n_base_agents: 3
-min_iterations_per_agent: 3
-max_iterations_per_agent: 25
-max_rounds: 10                   # Maximum debate rounds
+min_iterations_per_agent: 1
+max_iterations_per_agent: 3   # Paper Appendix E.2: 3 iterations per agent per round; codebase default: 25
+max_rounds: 3                 # Paper Appendix E.2: 3 debate rounds; codebase default: 10
 consensus_threshold: 0.7         # 70% agreement needed for consensus
 task_blurb: "peer collaborator" 
