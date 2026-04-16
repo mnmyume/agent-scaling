@@ -265,7 +265,7 @@ class WorkerSubagent(BaseAgentWithTools):
             iteration_num=curr_iteration,
         )
 
-        llm_response = self.llm.invoke(messages)
+        llm_response = self.llm_w_tools.invoke(messages)
 
         # Update agent's conversation
         self.conv_history.add_internal_message(

@@ -93,6 +93,12 @@ class ChatLiteLLMLC(ChatLiteLLM):
     log_langfuse: bool = False
 
     def _create_chat_result(self, response: Mapping[str, Any]) -> ChatResult:
+        # Some providers (e.g. MiniMax) strip the provider prefix from the model
+        # name in the response (e.g. "MiniMax-M2.7" instead of "anthropic/MiniMax-M2.7").
+        # Restore it so downstream code like completion_cost can resolve the provider.
+        resp_model = getattr(response, "model", None) or ""
+        if "/" not in resp_model and self.model and "/" in self.model:
+            response.model = self.model  # type: ignore[union-attr]
         res: ChatResult = super()._create_chat_result(response)
         if res.llm_output is None:
             res.llm_output = {}

@@ -398,23 +398,26 @@ class LeadAgent(BaseAgentWithTools):
             self.prompts["lead_agent"].get_template("coordination")
         )
 
-        response = self.llm.invoke(coordination_messages)
-        self.conv_history.add_response(
-            llm_response=response,
-            tag=f"coordination_{round_num}",
-        )
-
-        message = response.text()
-
-        if message and len(message.strip()) > 10:
-            logger.info(
-                f"Orchestrator coordination for {agent.agent_id}: {message[:100]}..."
+        try:
+            response = self.llm.invoke(coordination_messages)
+            self.conv_history.add_response(
+                llm_response=response,
+                tag=f"coordination_{round_num}",
             )
-            return message
-        else:
-            logger.warning(
-                f"Orchestrator coordination too short for {agent.agent_id}, using fallback"
-            )
+
+            message = response.text()
+
+            if message and len(message.strip()) > 10:
+                logger.info(
+                    f"Orchestrator coordination for {agent.agent_id}: {message[:100]}..."
+                )
+                return message
+            else:
+                logger.warning(
+                    f"Orchestrator coordination too short for {agent.agent_id}, using fallback"
+                )
+        except Exception as e:
+            logger.warning(f"Orchestrator coordination failed for {agent.agent_id}: {e}, using fallback")
         # Fallback to coordination_fallback template from YAML
         try:
             coordination_fallback_template = self.prompts["lead_agent"].get_template(
