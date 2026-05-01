@@ -215,6 +215,23 @@ exp_outputs/
     "num_instances": 100
   }
   ```
+- **`instance_runs/*/trace_events.jsonl`**: Structured local trace events for
+  comparing runs. Events include model inputs, visible model responses, tool
+  calls, observations, coordination messages, errors, final answers, and
+  available token/cache/cost metadata. This records observable decision traces,
+  not hidden chain-of-thought.
+
+### Comparing Runs Locally
+
+Use `scripts/compare_traces.py` to compare two experiment output directories:
+
+```bash
+python scripts/compare_traces.py exp_outputs/run_a exp_outputs/run_b
+python scripts/compare_traces.py exp_outputs/run_a exp_outputs/run_b --instance 0007
+```
+
+The script reports aggregate metrics, instances whose primary metric changed,
+and the first semantic trace event where each inspected instance diverged.
 
 ## Example Traces
 

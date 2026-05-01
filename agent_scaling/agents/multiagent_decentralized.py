@@ -8,6 +8,11 @@ from agent_scaling.agents.base import AgentSystemWithTools
 from agent_scaling.config.llm import LLMParams
 from agent_scaling.datasets import DatasetInstance, DatasetInstanceOutputWithTrajectory
 from agent_scaling.logger import logger
+from agent_scaling.tracing import (
+    make_trace_event,
+    subagent_trace_events,
+    write_trace_events,
+)
 from agent_scaling.utils import write_yaml
 
 from .multiagent_components.conversation import SubAgentRoundResult
@@ -285,6 +290,22 @@ class DecentralizedMultiAgentSystem(AgentSystemWithTools):
                 osp.join(instance_dir, "multi_agent_output.yaml"),
                 use_long_str_representer=True,
                 truncate_floats=False,
+            )
+            trace_events = subagent_trace_events(
+                self.subagents,
+                instance_idx=instance_idx,
+            )
+            trace_events.append(
+                make_trace_event(
+                    "final_answer",
+                    instance_idx=instance_idx,
+                    agent_id="system",
+                    content=final_answer,
+                )
+            )
+            write_trace_events(
+                trace_events,
+                osp.join(instance_dir, "trace_events.jsonl"),
             )
 
         return DatasetInstanceOutputWithTrajectory(

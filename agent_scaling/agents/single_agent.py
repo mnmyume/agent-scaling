@@ -18,6 +18,11 @@ from agent_scaling.datasets import (
 )
 from agent_scaling.env import AgentEnvironment
 from agent_scaling.logger import logger
+from agent_scaling.tracing import (
+    make_trace_event,
+    single_agent_response_events,
+    write_trace_events,
+)
 from agent_scaling.utils import write_yaml
 
 from .registry import register_agent
@@ -64,6 +69,7 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
             self.prompts["main"].compile(**shared_prompt_templates),
         )
         trajectory: List[TrajectoryStep] = []
+        trace_events = []
         final_answer = ""
         final_env_output = {}
         is_done = False
@@ -72,6 +78,14 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
             response = cast(AIMessage, response)
             if response.tool_calls:
                 response.tool_calls = [response.tool_calls[0]]
+            trace_events.extend(
+                single_agent_response_events(
+                    instance_idx=instance_idx,
+                    step=step,
+                    messages=messages,
+                    response=response,
+                )
+            )
 
             messages.append(convert_to_openai_messages(response))
             tool_resp: ToolMessage | None = None
@@ -83,7 +97,26 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
                     tool_name = tool_call["name"]
                     tool_input = tool_call["args"]
                     action = f"{tool_name}({', '.join([f'{k}={v}' for k, v in tool_input.items()])})"
+                    trace_events.append(
+                        make_trace_event(
+                            "tool_call",
+                            instance_idx=instance_idx,
+                            step=step,
+                            tool_name=tool_name,
+                            tool_args=tool_input,
+                        )
+                    )
                     messages.append(convert_to_openai_messages(tool_resp))
+                    trace_events.append(
+                        make_trace_event(
+                            "tool_observation",
+                            instance_idx=instance_idx,
+                            step=step,
+                            tool_name=tool_name,
+                            observation=str(tool_resp.content),
+                            status="ok",
+                        )
+                    )
                     is_done = tool_name == "done"
                 except Exception as e:
                     action = ""
@@ -96,6 +129,16 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
                     logger.warning(
                         f"Tool **{tool_name}** failed with error: {str(e)}\n{traceback.format_exc()}"
                     )
+                    trace_events.append(
+                        make_trace_event(
+                            "error",
+                            instance_idx=instance_idx,
+                            step=step,
+                            tool_name=tool_name,
+                            content=str(e),
+                            status="tool_error",
+                        )
+                    )
             else:
                 action = ""
                 messages.append(
@@ -105,6 +148,15 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
                     }
                 )
                 logger.warning("No tool calls found in the response.")
+                trace_events.append(
+                    make_trace_event(
+                        "error",
+                        instance_idx=instance_idx,
+                        step=step,
+                        content="No tool calls found in the response.",
+                        status="missing_tool_call",
+                    )
+                )
             trajectory.append(
                 TrajectoryStep(
                     action=action,
@@ -195,6 +247,14 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
                     except Exception as e:
                         logger.warning(f"Auto-submit on budget exhaustion failed: {e}")
         final_env_output = env.env_status()
+        trace_events.append(
+            make_trace_event(
+                "final_answer",
+                instance_idx=instance_idx,
+                content=final_answer,
+                metadata={"final_env_output": final_env_output},
+            )
+        )
         if instance_dir is not None:
             out = {
                 "trajectory": [t.model_dump() for t in trajectory],
@@ -204,6 +264,10 @@ class SingleAgent(AgentSystemWithTools[AgentEnvironment]):
                 out,
                 osp.join(instance_dir, "agent_output.yaml"),
                 use_long_str_representer=True,
+            )
+            write_trace_events(
+                trace_events,
+                osp.join(instance_dir, "trace_events.jsonl"),
             )
         return DatasetInstanceOutputWithTrajectory(
             data_instance=instance,
